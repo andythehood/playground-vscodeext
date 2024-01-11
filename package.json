@@ -1,13 +1,25 @@
 {
   "name": "playground",
-  "displayName": "playground",
+  "displayName": "Data Transformer Playground",
+  "publisher": "andythehood",
   "description": "Data Transformer Playground Extension",
+  "icon": "media/icon.png",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andythehood/playground-vscodeext"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Testing"
+  ],
+  "keywords": [
+    "jsonnet",
+    "application-integration",
+    "google-cloud"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
@@ -105,6 +117,16 @@
           "group": "navigation@6"
         }
       ]
+    },
+    "configuration": {
+      "title": "Data Transformer Playground",
+      "properties": {
+        "datatransformer.playground.jsonnetServerUri": {
+          "type": "string",
+          "description": "URI of the Jsonnet Server",
+          "default": "http://localhost:8080/exec"
+        }
+      }
     }
   },
   "scripts": {
@@ -121,13 +143,12 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
-    "@vscode/codicons": "^0.0.35",
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.8",
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "child_process": "^1.0.2"
+    "@vscode/codicons": "^0.0.35"
   }
 }

@@ -12,27 +12,15 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "playground" is now active!');
 
   const workbenchConfig = vscode.workspace.getConfiguration(
-    "jsonnet.languageServer",
+    "datatransformer.playground",
   );
-  let s: string;
-
-  const extStrs: {[s: string]: any} | undefined =
-    workbenchConfig.get("extVars");
-
-  const extCodes: {[s: string]: any} | undefined =
-    workbenchConfig.get("extCode");
-
-  if (extStrs) {
-    for (const [key, value] of Object.entries(extStrs)) {
-      console.log(`${key}: ${value}`);
-    }
-  }
+  let jsonnetServerUri: string =
+    workbenchConfig?.get("jsonnetServerUri") || "http://localhost:8080/exec";
 
   // Register the Sidebar Panels
   const extvarProvider = new ExtVarsViewProvider(
     context.extensionUri,
-    extStrs,
-    extCodes,
+    jsonnetServerUri,
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("extVarsView", extvarProvider),
