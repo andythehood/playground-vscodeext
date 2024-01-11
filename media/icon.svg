@@ -1,0 +1,16 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <g transform="scale(0.5)">
+    <path fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2" d="M28.317 15.993H2.999">
+    </path>
+    <path d="M25.986 8.988h-4.179a5.6 5.6 0 00-3.587 1.3l-5.289 4.407a5.6 5.6 0 01-3.587 1.3H2.982" fill="none"
+      stroke="#000" stroke-miterlimit="10" stroke-width="2"></path>
+    <path
+      d="M21.988 3.992h-2.983a5.588 5.588 0 00-3.58 1.3l-5.278 4.4a5.6 5.6 0 01-3.58 1.3H2.981m0 10.008h3.57a5.589 5.589 0 013.582 1.3l5.282 4.4A5.6 5.6 0 0019 27.992h2.99"
+      fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"></path>
+    <path d="M4.332 15.993H9.3a5.6 5.6 0 013.581 1.3l5.28 4.4a5.594 5.594 0 003.582 1.3h4.24" fill="none" stroke="#000"
+      stroke-miterlimit="10" stroke-width="2"></path>
+    <circle cx="25.975" cy="15.991" r="3" fill="#000"></circle>
+    <circle cx="19.984" cy="8.988" r="3" fill="#000"></circle>
+    <circle cx="14" cy="25.992" r="3" fill="#000"></circle>
+  </g>
+</svg>

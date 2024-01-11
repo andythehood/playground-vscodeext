@@ -1,0 +1,127 @@
+body {
+	background-color: transparent;
+}
+
+/* Remove default bullets */
+ul, #extvarUL {
+  list-style-type: none;
+}
+
+/* Remove margins and padding from the parent ul */
+#extvarUL {
+  margin: 0;
+  margin-left: -0px;
+
+  padding: 0;
+}
+
+li,  ul, #extvarUL {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+
+i, li, ul, #extvarUL {
+  margin-right: 6px;
+}
+
+textarea {
+min-height: 80px;
+min-width: 100%; 
+max-width: 100%;
+font-size: 12px;
+}
+
+.chevron-down {
+  transform: rotate(90deg);
+}
+
+/* Hide the nested list */
+.nested {
+  display: none;
+}
+
+/* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+.active {
+  display: block;
+}
+
+
+#icons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+    justify-content: center;
+}
+
+#icons .icon {
+	width: 140px;
+	padding: 20px;
+	font-size: 14px;
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+}
+
+#icons .icon .codicon {
+	font-size: 32px;
+	padding-bottom: 16px;
+}
+
+#addExtvar {
+  display: none;
+  margin-bottom: 5px;
+}
+
+
+.addextvar-radio {
+  display: inline !important;
+  width: 14px !important;
+  position: relative !important;
+}
+
+fieldset {
+  border-width: 1px;
+}
+
+.trash {
+  position: absolute;
+  right: 40px;
+}
+
+.trash-hidden {
+  display: none !important;
+}
+
+#addextvar-name {
+	margin: 2px 0px;
+	 resize: none;
+	  min-height: 32px;
+		 min-width: 100%; 
+	max-width: 100%;
+}
+
+#addextvar-panel {
+	width: 100%;
+	 border-style: solid; 
+	 border-color: #000;
+	  border-width: 1px;
+		 padding:3px;
+}
+
+#addextvar-value {
+	margin: 2px 0;
+	 max-height: 600px; 
+	 min-width: 100%; 
+	 max-width: 100%;
+}
+
+#addextvar-cancel, #addextvar-add {
+	width:60px; 
+	margin:5px;
+}
+
+.addextvar-title {
+	font-weight: bold;
+	margin: 5px;
+}

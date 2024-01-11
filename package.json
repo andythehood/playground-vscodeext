@@ -1,0 +1,133 @@
+{
+  "name": "playground",
+  "displayName": "playground",
+  "description": "Data Transformer Playground Extension",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "playground-sidebar-view",
+          "title": "Data Transformer Playground",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [],
+      "playground-sidebar-view": [
+        {
+          "id": "extVarsView",
+          "type": "webview",
+          "name": "External Variables"
+        },
+        {
+          "id": "helpView",
+          "name": "Help and Feedback",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "playground.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "playground.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "playground.addExtVar",
+        "title": "Add",
+        "icon": "$(add)"
+      },
+      {
+        "command": "playground.save",
+        "title": "Save",
+        "icon": "$(save)"
+      },
+      {
+        "command": "playground.restore",
+        "title": "Restore",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "playground.insertSnippet",
+        "title": "Data Transformer Playground: Import Functions Snippet"
+      },
+      {
+        "command": "playground.newTemplate",
+        "title": "Data Transformer Playground: New Template"
+      },
+      {
+        "command": "playground.previewToSide",
+        "title": "Data Transformer Playground: Open Preview to the Side",
+        "when": "editorLangId == jsonnet",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "playground.collapseAll",
+          "when": "view == extVarsView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "playground.expandAll",
+          "when": "view == extVarsView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "playground.addExtVar",
+          "when": "view == extVarsView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "playground.save",
+          "when": "view == extVarsView",
+          "group": "navigation@5"
+        },
+        {
+          "command": "playground.restore",
+          "when": "view == extVarsView",
+          "group": "navigation@6"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/codicons": "^0.0.35",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2"
+  }
+}
