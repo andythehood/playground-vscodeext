@@ -109,29 +109,32 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
       extVars: this.extVarsState,
     };
 
-    const res = await fetch(this._jsonnetServerUri, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {"Content-Type": "application/json"},
-    });
+    try {
+      console.log("calling", this._jsonnetServerUri);
 
-    const data: any = await res.json();
-
-    if (!this.panel) {
-      this.panel = vscode.window.createWebviewPanel(
-        "jsonnetPreview",
-        title,
-        {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
-        {},
-      );
-      this.panel.onDidDispose(() => {
-        this.panel = null;
+      const res = await fetch(this._jsonnetServerUri, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {"Content-Type": "application/json"},
       });
-    } else {
-      this.panel.title = title;
-    }
 
-    const html = `<html>
+      const data: any = await res.json();
+
+      if (!this.panel) {
+        this.panel = vscode.window.createWebviewPanel(
+          "jsonnetPreview",
+          title,
+          {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
+          {},
+        );
+        this.panel.onDidDispose(() => {
+          this.panel = null;
+        });
+      } else {
+        this.panel.title = title;
+      }
+
+      const html = `<html>
 <head>
 </head>
 <body>
@@ -140,7 +143,12 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 </body>
 </html>`;
 
-    this.panel.webview.html = html;
+      this.panel.webview.html = html;
+    } catch (e: any) {
+      vscode.window.showErrorMessage(
+        `Error calling Jsonnet Server: ${e.message} ${e.cause}`,
+      );
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
