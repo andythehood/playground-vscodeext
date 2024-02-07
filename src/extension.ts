@@ -1,7 +1,20 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+/*
+  Copyright 2024 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 import * as vscode from "vscode";
-import * as path from "path";
 
 import {ExtVarsViewProvider} from "./ExtVarsViewProvider";
 import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
@@ -15,12 +28,6 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "datatransformer" is now active!',
   );
-
-  // let fullFilePath = context.asAbsolutePath(
-  //   path.join("media", "appint.icon.svg"),
-  // );
-
-  // vscode.window.showErrorMessage(`File Path: ${fullFilePath}`);
 
   const workbenchConfig = vscode.workspace.getConfiguration(
     "datatransformer.playground",
@@ -73,29 +80,6 @@ export function activate(context: vscode.ExtensionContext) {
     "datatransformer",
     providers.documentFormattingEditProvider,
   );
-
-  // vscode.languages.registerHoverProvider(
-  //   "datatransformer",
-  //   providers.hoverProvider,
-  // );
-
-  // const ph:vscode.HoverProvider = {
-  //   provideHover: (document: vscode.TextDocument, position: vscode.Position, token:vscode.CancellationToken):vscode.ProviderResult<vscode.Hover> => {
-  //     return {
-  //       contents: ['Hover Content']
-  //     };
-  //   }
-  // };
-
-  // vscode.languages.registerHoverProvider('javascript', ph);
-
-  // vscode.languages.registerHoverProvider('javascript', {
-  //   provideHover(document, position, token) {
-  //     return {
-  //       contents: ['Hover Content']
-  //     };
-  //   }
-  // });
 
   // Register the Commands
 
