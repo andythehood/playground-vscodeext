@@ -1,21 +1,32 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import * as path from "path";
+
 import {ExtVarsViewProvider} from "./ExtVarsViewProvider";
-import {HelpTreeDataProvider, HelpTreeItem} from "./HelpTreeDataProvider";
+import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
+import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "playground" is now active!');
+  console.log(
+    'Congratulations, your extension "datatransformer" is now active!',
+  );
+
+  // let fullFilePath = context.asAbsolutePath(
+  //   path.join("media", "appint.icon.svg"),
+  // );
+
+  // vscode.window.showErrorMessage(`File Path: ${fullFilePath}`);
 
   const workbenchConfig = vscode.workspace.getConfiguration(
     "datatransformer.playground",
   );
   let jsonnetServerUri: string =
-    workbenchConfig?.get("jsonnetServerUri") || "http://localhost:8080/exec";
+    workbenchConfig?.get("jsonnetServerUri") || "http://localhost:8080";
 
   // Register the Sidebar Panels
   const extvarProvider = new ExtVarsViewProvider(
@@ -38,6 +49,53 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(helpTreeView);
+
+  const diagnosticCollection =
+    vscode.languages.createDiagnosticCollection("datatransformer");
+  context.subscriptions.push(diagnosticCollection);
+
+  const providers = new LanguageFeaturesProviders(
+    jsonnetServerUri,
+    diagnosticCollection,
+  );
+  vscode.languages.registerHoverProvider(
+    "datatransformer",
+    providers.hoverProvider,
+  );
+
+  vscode.languages.registerCompletionItemProvider(
+    "datatransformer",
+    providers.completionItemProvider,
+    ".",
+  );
+
+  vscode.languages.registerDocumentFormattingEditProvider(
+    "datatransformer",
+    providers.documentFormattingEditProvider,
+  );
+
+  // vscode.languages.registerHoverProvider(
+  //   "datatransformer",
+  //   providers.hoverProvider,
+  // );
+
+  // const ph:vscode.HoverProvider = {
+  //   provideHover: (document: vscode.TextDocument, position: vscode.Position, token:vscode.CancellationToken):vscode.ProviderResult<vscode.Hover> => {
+  //     return {
+  //       contents: ['Hover Content']
+  //     };
+  //   }
+  // };
+
+  // vscode.languages.registerHoverProvider('javascript', ph);
+
+  // vscode.languages.registerHoverProvider('javascript', {
+  //   provideHover(document, position, token) {
+  //     return {
+  //       contents: ['Hover Content']
+  //     };
+  //   }
+  // });
 
   // Register the Commands
 

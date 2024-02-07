@@ -1,0 +1,299 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Data Transformer",
+  "patterns": [
+    {
+      "include": "#expression"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#additional-functions"
+    }
+  ],
+  "repository": {
+    "builtin-functions": {
+      "comment": "Functions from: https://jsonnet.org/ref/stdlib.html",
+      "patterns": [
+        {
+          "comment": "External Variables",
+          "match": "\\bstd[.]extVar\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Types and Reflection",
+          "match": "\\bstd[.](thisFile|type|length|get|objectHas|objectFields|objectValues|objectHasAll|objectFieldsAll|objectValuesAll|prune|mapWithKey)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Mathematical Utilities 1",
+          "match": "\\bstd[.](abs|sign|max|min|pow|exp|log|exponent|mantissa|floor|ceil|sqrt|sin|cos|tan|asin|acos|atan)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Mathematical Utilities 2",
+          "match": "\\bstd[.]clamp\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Assertions and Debugging",
+          "match": "\\bstd[.]assertEqual\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "String Manipulation",
+          "match": "\\bstd[.](toString|codepoint|char|substr|findSubstr|startsWith|endsWith|stripChars|lstripChars|rstripChars|split|splitLimit|strReplace|asciiUpper|asciiLower|stringChars|format|escapeStringBash|escapeStringDollars|escapeStringJson|escapeStringPython)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Parsing 1",
+          "match": "\\bstd[.]parse(Int|Octal|Hex|Json|Yaml)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Parsing 2",
+          "match": "\\bstd[.](encodeUTF8|decodeUTF8)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Manifestation",
+          "match": "\\bstd[.]manifest(Ini|Python|PythonVars|JsonEx|JsonMinified|YamlDoc|YamlStream|XmlJsonml|TomlEx)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Arrays",
+          "match": "\\bstd[.](makeArray|member|count|find|map|mapWithIndex|filterMap|flatMap|filter|foldl|foldr|range|repeat|slice|join|lines|flattenArrays|reverse|sort|uniq)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Sets",
+          "match": "\\bstd[.]set(Inter|Union|Diff|Member)?\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Encoding",
+          "match": "\\bstd[.](base64|base64DecodeBytes|base64Decode|md5)\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "JSON Merge Patch",
+          "match": "\\bstd[.]mergePatch\\b",
+          "name": "support.function.jsonnet"
+        },
+        {
+          "comment": "Debugging",
+          "match": "\\bstd[.]trace\\b",
+          "name": "support.function.jsonnet"
+        }
+      ]
+    },
+    "additional-functions": {
+      "comment": "Functions from: https://cloud.google.com/application-integration/docs/data-transformer-functions-reference",
+
+      "patterns": [
+        {
+          "comment": "Array functions",
+          "match": "\\bf[.](avg|contains|maxArray|minArray|remove|removeAt|sum|groupBy|zip|unzip)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "Aggregate functions",
+          "match": "\\bf[.](xnor|xor)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "Hash functions",
+          "match": "\\bf[.](sha1|sha256|sha512|sha3)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "JSON functions",
+          "match": "\\bf[.](manifestXml|objectRemoveKey|parseXml|parseCsvWithHeader|manifestCsv)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "Mathematical functions",
+          "match": "\\bf[.](isDecimal|isEven|isInteger|isOdd|randomNumber|round)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "String functions",
+          "match": "\\bf[.](equalsIgnoreCase|isEmpty|match|trim)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "Timestamp functions",
+          "match": "\\bf[.](dateFormat|isLeapYear|nowInMillis)\\b",
+          "name": "support.function.datatransformer"
+        },
+        {
+          "comment": "Utility functions",
+          "match": "\\bf[.](uuid|getIntegrationName|getIntegrationRegion|getIntegrationVersionId|getIntegrationVersionNumber|getExecutionId|getProjectId)\\b",
+          "name": "support.function.datatransformer"
+        }
+      ]
+    },
+
+    "comment": {
+      "patterns": [
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.datatransformer"
+        },
+        {
+          "match": "//.*$",
+          "name": "comment.line.datatransformer"
+        },
+        {
+          "match": "#.*$",
+          "name": "comment.block.datatransformer"
+        }
+      ]
+    },
+    "double-quoted-strings": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.datatransformer",
+      "patterns": [
+        {
+          "match": "\\\\([\"\\\\/bfnrt]|(u[0-9a-fA-F]{4}))",
+          "name": "constant.character.escape.datatransformer"
+        },
+        {
+          "match": "\\\\[^\"\\\\/bfnrtu]",
+          "name": "invalid.illegal.datatransformer"
+        }
+      ]
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#literals"
+        },
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#single-quoted-strings"
+        },
+        {
+          "include": "#double-quoted-strings"
+        },
+        {
+          "include": "#triple-quoted-strings"
+        },
+        {
+          "include": "#builtin-functions"
+        },
+        {
+          "include": "#additional-functions"
+        },
+        {
+          "include": "#functions"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "begin": "\\b([a-zA-Z_][a-z0-9A-Z_]*)\\s*\\(",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function.datatransformer"
+            }
+          },
+          "end": "\\)",
+          "name": "meta.function",
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "match": "[!:~\\+\\-&\\|\\^=<>\\*\\/%]",
+          "name": "keyword.operator.datatransformer"
+        },
+        {
+          "match": "\\$",
+          "name": "keyword.other.datatransformer"
+        },
+        {
+          "match": "\\b(self|super|import|importstr|local|tailstrict)\\b",
+          "name": "keyword.other.datatransformer"
+        },
+        {
+          "match": "\\b(if|then|else|for|in|error|assert)\\b",
+          "name": "keyword.control.datatransformer"
+        },
+        {
+          "match": "\\b(function)\\b",
+          "name": "keyword.other.datatransformer"
+        },
+        {
+          "match": "[a-zA-Z_][a-z0-9A-Z_]*\\s*(:::|\\+:::)",
+          "name": "variable.parameter.datatransformer"
+        },
+        {
+          "match": "[a-zA-Z_][a-z0-9A-Z_]*\\s*(::|\\+::)",
+          "name": "entity.name.type"
+        },
+        {
+          "match": "[a-zA-Z_][a-z0-9A-Z_]*\\s*(:|\\+:)",
+          "name": "variable.parameter.datatransformer"
+        }
+      ]
+    },
+    "literals": {
+      "patterns": [
+        {
+          "match": "\\b(true|false|null)\\b",
+          "name": "constant.language.datatransformer"
+        },
+        {
+          "match": "\\b(\\d+([Ee][+-]?\\d+)?)\\b",
+          "name": "constant.numeric.datatransformer"
+        },
+        {
+          "match": "\\b\\d+[.]\\d*([Ee][+-]?\\d+)?\\b",
+          "name": "constant.numeric.datatransformer"
+        },
+        {
+          "match": "\\b[.]\\d+([Ee][+-]?\\d+)?\\b",
+          "name": "constant.numeric.datatransformer"
+        }
+      ]
+    },
+    "single-quoted-strings": {
+      "begin": "'",
+      "end": "'",
+      "name": "string.quoted.double.datatransformer",
+      "patterns": [
+        {
+          "match": "\\\\(['\\\\/bfnrt]|(u[0-9a-fA-F]{4}))",
+          "name": "constant.character.escape.datatransformer"
+        },
+        {
+          "match": "\\\\[^'\\\\/bfnrtu]",
+          "name": "invalid.illegal.datatransformer"
+        }
+      ]
+    },
+    "triple-quoted-strings": {
+      "patterns": [
+        {
+          "begin": "\\|\\|\\|",
+          "end": "\\|\\|\\|",
+          "name": "string.quoted.triple.datatransformer"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.datatransformer"
+}

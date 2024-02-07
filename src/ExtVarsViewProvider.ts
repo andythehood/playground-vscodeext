@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import path from "path";
+import * as path from "path";
 // import {execSync} from "child_process";
 
 const getNonce = () => {
@@ -112,7 +112,7 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
     try {
       console.log("calling", this._jsonnetServerUri);
 
-      const res = await fetch(this._jsonnetServerUri, {
+      const res = await fetch(`${this._jsonnetServerUri}/exec`, {
         method: "POST",
         body: JSON.stringify(body),
         headers: {"Content-Type": "application/json"},
