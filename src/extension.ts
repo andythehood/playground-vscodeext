@@ -32,13 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
   const workbenchConfig = vscode.workspace.getConfiguration(
     "datatransformer.playground",
   );
-  let jsonnetServerUri: string =
-    workbenchConfig?.get("jsonnetServerUri") || "http://localhost:8080";
+  let serverUri: string =
+    workbenchConfig?.get("serverUri") ||
+    "https://datatransformer-playground.web.app";
 
   // Register the Sidebar Panels
   const extvarProvider = new ExtVarsViewProvider(
     context.extensionUri,
-    jsonnetServerUri,
+    serverUri,
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("extVarsView", extvarProvider),
@@ -62,7 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(diagnosticCollection);
 
   const providers = new LanguageFeaturesProviders(
-    jsonnetServerUri,
+    serverUri,
     diagnosticCollection,
   );
   vscode.languages.registerHoverProvider(

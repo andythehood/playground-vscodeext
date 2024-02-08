@@ -37,7 +37,7 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
-    private readonly _jsonnetServerUri: string,
+    private readonly _serverUri: string,
   ) {}
 
   public resolveWebviewView(
@@ -126,9 +126,9 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
     };
 
     try {
-      console.log("calling", this._jsonnetServerUri);
+      console.log("calling", this._serverUri);
 
-      const res = await fetch(`${this._jsonnetServerUri}/exec`, {
+      const res = await fetch(`${this._serverUri}/exec`, {
         method: "POST",
         body: JSON.stringify(body),
         headers: {"Content-Type": "application/json"},

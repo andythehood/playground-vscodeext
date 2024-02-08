@@ -15,24 +15,16 @@
 */
 
 import * as vscode from "vscode";
-import {
-  // createFunctionsSuggestions,
-  // createStdlibSuggestions,
-  functionsCompletionItems,
-  stdlibCompletionItems,
-} from "./completionItems";
+
+import {stdlibFunctions, transformerFunctions} from "./functionDetails";
 
 export class LanguageFeaturesProviders {
-  // private jsonnetServerUri: string;
   public documentFormattingEditProvider: vscode.DocumentFormattingEditProvider;
 
   constructor(
-    _jsonnetServerUri: string,
+    _serverUri: string,
     _diagnosticCollection: vscode.DiagnosticCollection,
   ) {
-    // console.log("LanguageFeaturesProviders", jsonnetServerUri);
-    // this.jsonnetServerUri = _jsonnetServerUri;
-
     this.documentFormattingEditProvider = {
       async provideDocumentFormattingEdits(
         document: vscode.TextDocument,
@@ -53,7 +45,7 @@ export class LanguageFeaturesProviders {
 
         _diagnosticCollection.clear();
 
-        const res = await fetch(`http://localhost:8080/format`, {
+        const res = await fetch(`${_serverUri}/format`, {
           method: "POST",
           body: JSON.stringify(request),
           headers: {"Content-Type": "application/json"},
@@ -101,7 +93,6 @@ export class LanguageFeaturesProviders {
 
         const textEdit = vscode.TextEdit.replace(r, message);
 
-        console.log("wtf2");
         return [textEdit];
       },
     };
@@ -117,9 +108,40 @@ export class LanguageFeaturesProviders {
       const lineAt = document.lineAt(position.line);
 
       if (lineAt.text.match(/\bf\.$/)) {
+        const functionsCompletionItems = transformerFunctions.map((fn) => {
+          return {
+            label: fn.label,
+            sortText: `0-${fn.label}`,
+            kind: vscode.CompletionItemKind.Function,
+            detail: `f.${fn.detail}`,
+            documentation: fn.documentation,
+            insertText: new vscode.SnippetString(fn.snippet),
+          };
+        });
+
+        const stdlibCompletionItems = stdlibFunctions.map((fn) => {
+          return {
+            label: fn.label,
+            sortText: `1-${fn.label}`,
+            kind: vscode.CompletionItemKind.Function,
+            detail: `f.${fn.detail}`,
+            documentation: fn.documentation,
+            insertText: new vscode.SnippetString(fn.snippet),
+          };
+        });
+
         return functionsCompletionItems.concat(stdlibCompletionItems);
       } else if (lineAt.text.match(/\bstd\.$/)) {
-        return stdlibCompletionItems;
+        return stdlibFunctions.map((fn) => {
+          return {
+            label: fn.label,
+            sortText: `1-${fn.label}`,
+            kind: vscode.CompletionItemKind.Function,
+            detail: `std.${fn.detail}`,
+            documentation: fn.documentation,
+            insertText: new vscode.SnippetString(fn.snippet),
+          };
+        });
       } else {
         return [];
       }
@@ -143,9 +165,9 @@ export class LanguageFeaturesProviders {
       const line = document.getText(r);
 
       if (line.match(/\bf\.\w+$/)) {
-        const items = functionsCompletionItems
-          .concat(stdlibCompletionItems)
-          .filter((item) => item.label === func);
+        const items = transformerFunctions
+          .concat(stdlibFunctions)
+          .filter((fn) => fn.label === func);
         if (items && items.length > 0) {
           const markdown = new vscode.MarkdownString(`|f.${items[0].detail}|
 |:----|
@@ -159,9 +181,7 @@ export class LanguageFeaturesProviders {
           };
         }
       } else if (line.match(/\bstd\.\w+$/)) {
-        const items = stdlibCompletionItems.filter(
-          (item) => item.label === func,
-        );
+        const items = stdlibFunctions.filter((fn) => fn.label === func);
         if (items && items.length > 0) {
           const markdown = new vscode.MarkdownString(`|std.${items[0].detail}|
 |:----|

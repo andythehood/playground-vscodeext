@@ -1,12 +1,8 @@
 local f = import 'functions';
 
-local s = f.extVar('myString');
-local d = f.uuid();
-local d2 = (std.length());
-// local dd = f.uniq(arr, keyF=id);
 
 {
   uu: f.uuid(),
-  s: s,
+
 
 }
