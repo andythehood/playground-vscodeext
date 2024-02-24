@@ -18,73 +18,73 @@
       "patterns": [
         {
           "comment": "External Variables",
-          "match": "\\bstd[.]extVar\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]extVar\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Types and Reflection",
-          "match": "\\bstd[.](thisFile|type|length|get|objectHas|objectFields|objectValues|objectHasAll|objectFieldsAll|objectValuesAll|prune|mapWithKey)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](thisFile|type|length|get|objectHas|objectFields|objectValues|objectHasAll|objectFieldsAll|objectValuesAll|prune|mapWithKey)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Mathematical Utilities 1",
-          "match": "\\bstd[.](abs|sign|max|min|pow|exp|log|exponent|mantissa|floor|ceil|sqrt|sin|cos|tan|asin|acos|atan)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](abs|sign|max|min|pow|exp|log|exponent|mantissa|floor|ceil|sqrt|sin|cos|tan|asin|acos|atan)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Mathematical Utilities 2",
-          "match": "\\bstd[.]clamp\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]clamp\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Assertions and Debugging",
-          "match": "\\bstd[.]assertEqual\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]assertEqual\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "String Manipulation",
-          "match": "\\bstd[.](toString|codepoint|char|substr|findSubstr|startsWith|endsWith|stripChars|lstripChars|rstripChars|split|splitLimit|strReplace|asciiUpper|asciiLower|stringChars|format|escapeStringBash|escapeStringDollars|escapeStringJson|escapeStringPython)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](toString|codepoint|char|substr|findSubstr|startsWith|endsWith|stripChars|lstripChars|rstripChars|split|splitLimit|strReplace|asciiUpper|asciiLower|stringChars|format|escapeStringBash|escapeStringDollars|escapeStringJson|escapeStringPython|escapeStringXML)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Parsing 1",
-          "match": "\\bstd[.]parse(Int|Octal|Hex|Json|Yaml)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]parse(Int|Octal|Hex|Json|Yaml)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Parsing 2",
-          "match": "\\bstd[.](encodeUTF8|decodeUTF8)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](encodeUTF8|decodeUTF8)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Manifestation",
-          "match": "\\bstd[.]manifest(Ini|Python|PythonVars|JsonEx|JsonMinified|YamlDoc|YamlStream|XmlJsonml|TomlEx)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]manifest(Ini|Python|PythonVars|JsonEx|JsonMinified|YamlDoc|YamlStream|XmlJsonml|TomlEx)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Arrays",
-          "match": "\\bstd[.](makeArray|member|count|find|map|mapWithIndex|filterMap|flatMap|filter|foldl|foldr|range|repeat|slice|join|lines|flattenArrays|reverse|sort|uniq)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](makeArray|member|count|find|map|mapWithIndex|filterMap|flatMap|filter|foldl|foldr|range|repeat|slice|join|lines|flattenArrays|reverse|sort|uniq)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Sets",
-          "match": "\\bstd[.]set(Inter|Union|Diff|Member)?\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]set(Inter|Union|Diff|Member)?\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Encoding",
-          "match": "\\bstd[.](base64|base64DecodeBytes|base64Decode|md5)\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.](base64|base64DecodeBytes|base64Decode|md5)\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "JSON Merge Patch",
-          "match": "\\bstd[.]mergePatch\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]mergePatch\\b",
+          "name": "support.function.datatransformer"
         },
         {
           "comment": "Debugging",
-          "match": "\\bstd[.]trace\\b",
-          "name": "support.function.jsonnet"
+          "match": "\\b(std|f)[.]trace\\b",
+          "name": "support.function.datatransformer"
         }
       ]
     },

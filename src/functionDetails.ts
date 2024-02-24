@@ -303,7 +303,7 @@ export const stdlibFunctions: JsonnetFunction[] = [
     detail: "extVar(x)",
     documentation:
       "If an external variable with the given name was defined, return its string value. Otherwise, raise an error.",
-    snippet: "extVar(${1:x})",
+    snippet: 'extVar("${1:x}")',
   },
   {
     label: "type",
@@ -712,8 +712,8 @@ Example: local description = "Multiline\nc:\\path"; "{name: %s}" % std.escapeStr
     snippet: "escapeStringPython(${1:str})",
   },
   {
-    label: "escapeStringXml",
-    detail: "escapeStringXml(str)",
+    label: "escapeStringXML",
+    detail: "escapeStringXML(str)",
     documentation: `Convert str to allow it to be embedded in XML (or HTML). The following replacements are made:
 
       {
@@ -723,7 +723,7 @@ Example: local description = "Multiline\nc:\\path"; "{name: %s}" % std.escapeStr
         "\"": "&quot;",
         "'": "&apos;",
       }`,
-    snippet: "escapeStringXml(${1:str})",
+    snippet: "escapeStringXML(${1:str})",
   },
   {
     label: "parseInt",

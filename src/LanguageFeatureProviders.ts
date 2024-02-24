@@ -172,8 +172,15 @@ export class LanguageFeaturesProviders {
           const markdown = new vscode.MarkdownString(`|f.${items[0].detail}|
 |:----|
 |${items[0].documentation}|`);
+
+          const r1 = new vscode.Range(
+            new vscode.Position(range.start.line, range.start.character - 2), // backtrack for "f."
+            new vscode.Position(range.end.line, range.end.character),
+          );
+
           return {
             contents: [markdown],
+            range: r1,
           };
         } else {
           return {
@@ -186,8 +193,13 @@ export class LanguageFeaturesProviders {
           const markdown = new vscode.MarkdownString(`|std.${items[0].detail}|
 |:----|
 |${items[0].documentation}|`);
+          const r1 = new vscode.Range(
+            new vscode.Position(range.start.line, range.start.character - 4), // backtrack for "std."
+            new vscode.Position(range.end.line, range.end.character),
+          );
           return {
             contents: [markdown],
+            range: r1,
           };
         } else {
           return {

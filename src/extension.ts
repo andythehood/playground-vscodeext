@@ -36,10 +36,15 @@ export function activate(context: vscode.ExtensionContext) {
     workbenchConfig?.get("serverUri") ||
     "https://datatransformer-playground.web.app";
 
+  const diagnosticCollection =
+    vscode.languages.createDiagnosticCollection("datatransformer");
+  context.subscriptions.push(diagnosticCollection);
+
   // Register the Sidebar Panels
   const extvarProvider = new ExtVarsViewProvider(
     context.extensionUri,
     serverUri,
+    diagnosticCollection,
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("extVarsView", extvarProvider),
@@ -57,10 +62,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(helpTreeView);
-
-  const diagnosticCollection =
-    vscode.languages.createDiagnosticCollection("datatransformer");
-  context.subscriptions.push(diagnosticCollection);
 
   const providers = new LanguageFeaturesProviders(
     serverUri,
@@ -85,49 +86,50 @@ export function activate(context: vscode.ExtensionContext) {
   // Register the Commands
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.collapseAll", () => {
+    vscode.commands.registerCommand("datatransformer.collapseAll", () => {
       extvarProvider.collapseAll();
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.addExtVar", () => {
+    vscode.commands.registerCommand("datatransformer.addExtVar", () => {
       extvarProvider.addExtVar();
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.expandAll", () => {
+    vscode.commands.registerCommand("datatransformer.expandAll", () => {
       extvarProvider.expandAll();
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.reset", () => {
+    vscode.commands.registerCommand("datatransformer.reset", () => {
       extvarProvider.reset();
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.restore", () => {
+    vscode.commands.registerCommand("datatransformer.restore", () => {
       extvarProvider.restore();
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.save", () => {
+    vscode.commands.registerCommand("datatransformer.save", () => {
       extvarProvider.save();
     }),
   );
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
   let insertSnippetCmd = vscode.commands.registerCommand(
-    "playground.insertSnippet",
+    "datatransformer.insertSnippet",
     () => {
-      const snippet = `local f = import 'functions';
+      const snippet = `// Import the additional functions library
+local f = import 'functions';
 
+{
+  id: f.getExecutionId(),
+}
 `;
       vscode.window.activeTextEditor?.insertSnippet(
         new vscode.SnippetString(snippet),
@@ -137,13 +139,13 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(insertSnippetCmd);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("playground.previewToSide", () => {
+    vscode.commands.registerCommand("datatransformer.runScript", () => {
       extvarProvider.exec();
     }),
   );
 
-  let newTemplateCmd = vscode.commands.registerCommand(
-    "playground.newTemplate",
+  let exampleTemplateCmd = vscode.commands.registerCommand(
+    "datatransformer.exampleTemplate",
     () => {
       const snippet = `// Import additional functions library
 local f = import "functions";
@@ -185,6 +187,24 @@ local intArr = f.extVar("myIntArray");
   nowInMillis: f.nowInMillis(),
   uuid: f.uuid(),
 }`;
+
+      vscode.window.activeTextEditor?.insertSnippet(
+        new vscode.SnippetString(snippet),
+      );
+    },
+  );
+  context.subscriptions.push(exampleTemplateCmd);
+
+  let newTemplateCmd = vscode.commands.registerCommand(
+    "datatransformer.newTemplate",
+    () => {
+      const snippet = `// Import the additional functions library
+local f = import "functions";
+
+{
+  id: f.getExecutionId(),
+}`;
+
       vscode.window.activeTextEditor?.insertSnippet(
         new vscode.SnippetString(snippet),
       );

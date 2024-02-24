@@ -38,6 +38,7 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _serverUri: string,
+    private readonly _diagnosticCollection: vscode.DiagnosticCollection,
   ) {}
 
   public resolveWebviewView(
@@ -111,7 +112,7 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 
     if (!editor) {
       vscode.window.showErrorMessage(
-        "Can't open Jsonnet preview because there is no active window",
+        "Can't run Data Transformer script because there is no active window",
       );
       return;
     }
@@ -128,6 +129,8 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
     try {
       console.log("calling", this._serverUri);
 
+      this._diagnosticCollection.clear();
+
       const res = await fetch(`${this._serverUri}/exec`, {
         method: "POST",
         body: JSON.stringify(body),
@@ -136,9 +139,43 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 
       const data: any = await res.json();
 
+      console.log("result =", data);
+
+      if (data.status !== 200) {
+        //diagnostics
+
+        const location = data.message.substring(0, data.message.indexOf(" "));
+
+        const line = parseInt(location.split(":")[0]);
+        const charRange = location.split(":")[1];
+
+        console.log(line, charRange);
+        let startPos = 0;
+        let endPos = 0;
+
+        if (charRange.includes("-")) {
+          startPos = parseInt(charRange.split("-")[0]);
+          endPos = parseInt(charRange.split("-")[1]);
+        } else {
+          startPos = parseInt(charRange);
+          endPos = startPos;
+        }
+
+        const diag = new vscode.Diagnostic(
+          new vscode.Range(
+            new vscode.Position(line - 1, startPos - 1),
+            new vscode.Position(line - 1, endPos - 1),
+          ),
+          data.message.substring(data.message.indexOf(" ") + 1),
+          vscode.DiagnosticSeverity.Error,
+        );
+
+        this._diagnosticCollection.set(editor.document.uri, [diag]);
+      }
+
       if (!this.panel) {
         this.panel = vscode.window.createWebviewPanel(
-          "jsonnetPreview",
+          "datatransformerOutput",
           title,
           {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
           {},
@@ -184,15 +221,19 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this._extensionUri, "media", "main.css"),
     );
 
-    const codiconsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        "node_modules",
-        "@vscode/codicons",
-        "dist",
-        "codicon.css",
-      ),
+    const codiconUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "media", "codicon.css"),
     );
+
+    // const codiconsUri = webview.asWebviewUri(
+    //   vscode.Uri.joinPath(
+    //     this._extensionUri,
+    //     "node_modules",
+    //     "@vscode/codicons",
+    //     "dist",
+    //     "codicon.css",
+    //   ),
+    // );
 
     // Use a nonce to only allow a specific script to be run.
     const nonce = getNonce();
@@ -214,7 +255,7 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 				<link href="${styleResetUri}" rel="stylesheet">
 				<link href="${styleVSCodeUri}" rel="stylesheet">
 				<link href="${styleMainUri}" rel="stylesheet">
-        <link href="${codiconsUri}" rel="stylesheet" />
+        <link href="${codiconUri}" rel="stylesheet" />
 
 				<title>Data Transformer Playground</title>
 			</head>
