@@ -15,8 +15,9 @@
 */
 
 import * as vscode from "vscode";
+import {posix} from "path";
 
-import * as path from "path";
+// import * as path from "path";
 // import {execSync} from "child_process";
 
 const getNonce = () => {
@@ -29,17 +30,13 @@ const getNonce = () => {
   return text;
 };
 
-export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
+export class VariablesViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
 
-  private extVarsState: any;
-  private panel: vscode.WebviewPanel | null = null;
+  private extVarsUri: vscode.Uri | null = null;
+  private textEncoder = new TextEncoder();
 
-  constructor(
-    private readonly _extensionUri: vscode.Uri,
-    private readonly _serverUri: string,
-    private readonly _diagnosticCollection: vscode.DiagnosticCollection,
-  ) {}
+  constructor(private readonly _extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -59,12 +56,17 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((data) => {
+    webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case "stateUpdated": {
           console.log("updatedState=", data.value);
-          this.extVarsState = data.value;
 
+          if (this.extVarsUri) {
+            await vscode.workspace.fs.writeFile(
+              this.extVarsUri,
+              this.textEncoder.encode(JSON.stringify(data.value, null, 2)),
+            );
+          }
           break;
         }
       }
@@ -89,118 +91,32 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public reset() {
-    console.log("reset");
-    if (this._view) {
-      this._view.webview.postMessage({type: "reset"});
-    }
-  }
+  public async set(playgroundUri: vscode.Uri) {
+    console.log("set extvars", playgroundUri);
 
-  public restore() {
-    console.log("restore");
-    if (this._view) {
-      this._view.webview.postMessage({type: "restore"});
-    }
-  }
+    let extVars: any = [];
 
-  public save() {
-    console.log("save");
-  }
-
-  public async exec() {
-    const editor = vscode.window.activeTextEditor;
-
-    if (!editor) {
-      vscode.window.showErrorMessage(
-        "Can't run Data Transformer script because there is no active window",
-      );
-      return;
-    }
-
-    const title = `Data Transformer Output for '${path.basename(
-      editor.document.fileName,
-    )}'`;
-
-    const body = {
-      snippet: editor.document.getText(),
-      extVars: this.extVarsState,
-    };
-
-    try {
-      console.log("calling", this._serverUri);
-
-      this._diagnosticCollection.clear();
-
-      const res = await fetch(`${this._serverUri}/exec`, {
-        method: "POST",
-        body: JSON.stringify(body),
-        headers: {"Content-Type": "application/json"},
+    if (playgroundUri) {
+      const extVarsUri = playgroundUri.with({
+        path: posix.join(playgroundUri.path, "extVars.json"),
       });
+      this.extVarsUri = extVarsUri;
 
-      const data: any = await res.json();
+      const bytes = await vscode.workspace.fs.readFile(extVarsUri);
+      extVars = JSON.parse(bytes.toString());
+    } else {
+      this.extVarsUri = null;
+    }
 
-      console.log("result =", data);
+    if (this._view) {
+      this._view.webview.postMessage({type: "set", extVars: extVars});
+    }
+  }
 
-      if (data.status !== 200) {
-        //diagnostics
-
-        const location = data.message.substring(0, data.message.indexOf(" "));
-
-        const line = parseInt(location.split(":")[0]);
-        const charRange = location.split(":")[1];
-
-        console.log(line, charRange);
-        let startPos = 0;
-        let endPos = 0;
-
-        if (charRange.includes("-")) {
-          startPos = parseInt(charRange.split("-")[0]);
-          endPos = parseInt(charRange.split("-")[1]);
-        } else {
-          startPos = parseInt(charRange);
-          endPos = startPos;
-        }
-
-        const diag = new vscode.Diagnostic(
-          new vscode.Range(
-            new vscode.Position(line - 1, startPos - 1),
-            new vscode.Position(line - 1, endPos - 1),
-          ),
-          data.message.substring(data.message.indexOf(" ") + 1),
-          vscode.DiagnosticSeverity.Error,
-        );
-
-        this._diagnosticCollection.set(editor.document.uri, [diag]);
-      }
-
-      if (!this.panel) {
-        this.panel = vscode.window.createWebviewPanel(
-          "datatransformerOutput",
-          title,
-          {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
-          {},
-        );
-        this.panel.onDidDispose(() => {
-          this.panel = null;
-        });
-      } else {
-        this.panel.title = title;
-      }
-
-      const html = `<html>
-<head>
-</head>
-<body>
-<pre><code style="background-color: transparent;font-size: 12px;">${data.message}
-</code></pre>
-</body>
-</html>`;
-
-      this.panel.webview.html = html;
-    } catch (e: any) {
-      vscode.window.showErrorMessage(
-        `Error calling Jsonnet Server: ${e.message} ${e.cause}`,
-      );
+  public showIntro(value: boolean) {
+    console.log("showIntro", value);
+    if (this._view) {
+      this._view.webview.postMessage({type: "showIntro", value: value});
     }
   }
 
@@ -260,14 +176,19 @@ export class ExtVarsViewProvider implements vscode.WebviewViewProvider {
 				<title>Data Transformer Playground</title>
 			</head>
 			<body>
-        <p>Define External Variables that will be passed to the Data Transformer Jsonnet engine</p>
-        <br/>
-				<button id="addextvar-button">Add External Variable</button>
-        <br/>
+        <div id="intro_default"
+          <p>Please select a playground</p>
+        </div>
+        <div id="intro"
+          <p>Define variables that will be passed to the Data Transformer Jsonnet engine</p>
+          <br/>
+				  <button id="addextvar-button">Add Variable</button>
+          <br/>
+        </div>
 
         <div id="addExtvar">
 
-          <div id="addextvar-panel" >
+          <div id="addextvar-panel">
 
             <p class="addextvar-title" >Name:</p>
             <textarea  id="addextvar-name" rows="1" placeholder="Enter name..."  ></textarea>

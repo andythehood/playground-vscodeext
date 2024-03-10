@@ -11,19 +11,7 @@
     lastName: "Doe",
   };
 
-  const extVarsDefault = [
-    {name: "myStr", type: "string", value: "hello world!", open: true},
-    {name: "myXml", type: "string", value: "<Xml/>", open: false},
-    {name: "myArray", type: "array", value: "[1,2,3,4]", open: false},
-    {
-      name: "myJson",
-      type: "json",
-      value: JSON.stringify(j, null, 2),
-      open: false,
-    },
-    {name: "myInt", type: "int", value: "42", open: false},
-    {name: "myDouble", type: "double", value: "3.1459", open: false},
-  ];
+  const extVarsDefault = [];
 
   const oldState = vscode.getState() || {extvars: extVarsDefault};
 
@@ -104,8 +92,46 @@
         updateExtVars(extvarsState);
         break;
       }
+
+      case "set": {
+        console.log("set");
+        extvarsState = message.extVars;
+        updateExtVars(extvarsState);
+        break;
+      }
+
+      case "showIntro": {
+        console.log("showIntro");
+        showIntro(message.value);
+        break;
+      }
     }
   });
+
+  /**
+   * @param {boolean} value
+   */
+  function showIntro(value) {
+    if (value) {
+      let intro = document.getElementById("intro");
+      if (intro) {
+        intro.style.display = "block";
+      }
+      let intro_def = document.getElementById("intro_default");
+      if (intro_def) {
+        intro_def.style.display = "none";
+      }
+    } else {
+      let intro = document.getElementById("intro");
+      if (intro) {
+        intro.style.display = "none";
+      }
+      let intro_def = document.getElementById("intro_default");
+      if (intro_def) {
+        intro_def.style.display = "block";
+      }
+    }
+  }
 
   /**
    * @param {Array<{ name:string, type:string, value: string , open?: boolean} >} extvars

@@ -1,16 +1,16 @@
 {
-  "name": "datatransformer",
+  "name": "appint",
   "displayName": "Data Transformer Playground",
   "publisher": "andythehood@gmail.com",
-  "description": "Data Transformer Playground Extension",
+  "description": "Application Integration Extension",
   "icon": "media/icon.png",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
   },
   "engines": {
-    "vscode": "^1.83.0"
+    "vscode": "^1.86.0"
   },
   "categories": [
     "Programming Languages",
@@ -52,7 +52,7 @@
       "activitybar": [
         {
           "id": "playground-sidebar-view",
-          "title": "Data Transformer Playground",
+          "title": "Application Integration",
           "icon": "media/icon.svg"
         }
       ]
@@ -61,18 +61,63 @@
       "explorer": [],
       "playground-sidebar-view": [
         {
-          "id": "extVarsView",
-          "type": "webview",
-          "name": "External Variables"
+          "id": "playgroundsTreeView",
+          "type": "tree",
+          "name": "Playgrounds",
+          "visibility": "visible"
         },
         {
-          "id": "helpView",
+          "id": "scriptsTreeView",
+          "type": "tree",
+          "name": "Data Transformer Scripts",
+          "visibility": "visible"
+        },
+        {
+          "id": "variablesWebView",
+          "type": "webview",
+          "name": "Variables"
+        },
+        {
+          "id": "helpTreeView",
+          "type": "tree",
           "name": "Help and Feedback",
           "visibility": "collapsed"
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "playgroundsTreeView",
+        "when": "workspaceFolderCount > 0",
+        "contents": "No Playgrounds found [learn more](https://datatransformer-playground.web.app/).\n[New Playground](command:datatransformer.addPlayground)"
+      },
+      {
+        "view": "playgroundsTreeView",
+        "when": "workspaceFolderCount == 0",
+        "contents": "No Workspace or Folder open. Please open a VSCode Workspace or Folder to use Data Transformer Playgrounds."
+      },
+      {
+        "view": "scriptsTreeView",
+        "contents": "Please select a playground.",
+        "when": "!datatransformer.playgroundSelected"
+      },
+      {
+        "view": "scriptsTreeView",
+        "contents": "",
+        "when": "datatransformer.playgroundSelected"
+      }
+    ],
     "commands": [
+      {
+        "command": "datatransformer.importPlayground",
+        "title": "Import Playground",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "datatransformer.exportPlayground",
+        "title": "Export Playground",
+        "icon": "$(export)"
+      },
       {
         "command": "datatransformer.collapseAll",
         "title": "Collapse All",
@@ -85,18 +130,33 @@
       },
       {
         "command": "datatransformer.addExtVar",
-        "title": "Add",
+        "title": "Add Variable",
         "icon": "$(add)"
       },
       {
-        "command": "datatransformer.save",
-        "title": "Save",
-        "icon": "$(save)"
+        "command": "datatransformer.addPlayground",
+        "title": "Add Playground",
+        "icon": "$(add)"
       },
       {
-        "command": "datatransformer.restore",
-        "title": "Restore",
-        "icon": "$(refresh)"
+        "command": "datatransformer.takeSnapshot",
+        "title": "Take Snapshot",
+        "icon": "$(device-camera)"
+      },
+      {
+        "command": "datatransformer.deletePlayground",
+        "title": "Delete Playground",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "datatransformer.addScript",
+        "title": "Add Script",
+        "icon": "$(add)"
+      },
+      {
+        "command": "datatransformer.deleteScript",
+        "title": "Delete Script",
+        "icon": "$(trash)"
       },
       {
         "command": "datatransformer.insertSnippet",
@@ -111,9 +171,15 @@
         "title": "Data Transformer Playground: Example Template"
       },
       {
-        "command": "datatransformer.runScript",
+        "command": "datatransformer.selectAndRunScript",
         "title": "Data Transformer Playground: Run Script",
-        "when": "editorLangId == datatransformer",
+        "when": "editorLangId == datatransformer || view == scriptsTreeView",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "datatransformer.selectAndRunScript",
+        "title": "Data Transformer Playground: Run Script",
+        "when": "editorLangId == datatransformer || view == scriptsTreeView",
         "icon": "$(play-circle)"
       }
     ],
@@ -122,35 +188,67 @@
         "command": "datatransformer.runScript",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i",
-        "when": "editorTextFocus && editorLangId == datatransformer"
+        "xwhen": "editorLangId == datatransformer || view == scriptsTreeView"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "datatransformer.collapseAll",
-          "when": "view == extVarsView",
-          "group": "navigation@2"
-        },
-        {
-          "command": "datatransformer.expandAll",
-          "when": "view == extVarsView",
-          "group": "navigation@3"
-        },
-        {
-          "command": "datatransformer.addExtVar",
-          "when": "view == extVarsView",
+          "command": "datatransformer.addPlayground",
+          "when": "view == playgroundsTreeView",
           "group": "navigation@1"
         },
         {
-          "command": "datatransformer.save",
-          "when": "view == extVarsView",
-          "group": "navigation@5"
+          "command": "datatransformer.importPlayground",
+          "when": "view == playgroundsTreeView",
+          "group": "navigation@2"
         },
         {
-          "command": "datatransformer.restore",
-          "when": "view == extVarsView",
-          "group": "navigation@6"
+          "command": "datatransformer.addScript",
+          "when": "view == scriptsTreeView && datatransformer.playgroundSelected",
+          "group": "navigation@1"
+        },
+        {
+          "command": "datatransformer.addExtVar",
+          "when": "view == variablesWebView && datatransformer.playgroundSelected",
+          "group": "navigation@1"
+        },
+        {
+          "command": "datatransformer.collapseAll",
+          "when": "view == variablesWebView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "datatransformer.expandAll",
+          "when": "view == variablesWebView",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "datatransformer.deletePlayground",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "group": "inline@1"
+        },
+        {
+          "command": "datatransformer.exportPlayground",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "group": "inline@2"
+        },
+        {
+          "command": "datatransformer.takeSnapshot",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "group": "inline@3"
+        },
+        {
+          "command": "datatransformer.deleteScript",
+          "when": "view == scriptsTreeView && viewItem == ScriptsTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "datatransformer.selectAndRunScript",
+          "when": "view == scriptsTreeView",
+          "group": "inline@2"
         }
       ]
     },
@@ -177,7 +275,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "@types/vscode": "^1.83.0",
+    "@types/vscode": "^1.86.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "@vscode/codicons": "^0.0.35",

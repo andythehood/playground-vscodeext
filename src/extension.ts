@@ -16,18 +16,19 @@
 
 import * as vscode from "vscode";
 
-import {ExtVarsViewProvider} from "./ExtVarsViewProvider";
+import {VariablesViewProvider} from "./VariablesViewProvider";
 import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
 import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
+import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
+import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
   console.log(
-    'Congratulations, your extension "datatransformer" is now active!',
+    'Congratulations, your extension "appint" is now active!',
+    context.storageUri,
   );
+
+  const outputChannel = vscode.window.createOutputChannel("Data Transformer");
 
   const workbenchConfig = vscode.workspace.getConfiguration(
     "datatransformer.playground",
@@ -40,19 +41,90 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.languages.createDiagnosticCollection("datatransformer");
   context.subscriptions.push(diagnosticCollection);
 
+  // const myScheme = "script";
+  // const myProvider = new (class implements vscode.TextDocumentContentProvider {
+  //   // emitter and its event
+  //   onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+  //   onDidChange = this.onDidChangeEmitter.event;
+
+  //   provideTextDocumentContent(uri: vscode.Uri): string {
+  //     // simply invoke cowsay, use uri-path as text
+  //     return scriptsTreeDataProvider.provideTextDocumentContent(uri);
+  //   }
+  // })();
+  // context.subscriptions.push(
+  //   vscode.workspace.registerTextDocumentContentProvider(myScheme, myProvider),
+  // );
+
   // Register the Sidebar Panels
-  const extvarProvider = new ExtVarsViewProvider(
-    context.extensionUri,
-    serverUri,
-    diagnosticCollection,
-  );
+
+  const variablesViewProvider = new VariablesViewProvider(context.extensionUri);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("extVarsView", extvarProvider),
+    vscode.window.registerWebviewViewProvider(
+      "variablesWebView",
+      variablesViewProvider,
+    ),
   );
+
+  const scriptsTreeDataProvider = new ScriptsTreeDataProvider(
+    context.storageUri,
+  );
+
+  const scriptsTreeView = vscode.window.createTreeView("scriptsTreeView", {
+    treeDataProvider: scriptsTreeDataProvider,
+    showCollapseAll: true,
+    canSelectMany: false,
+  });
+  scriptsTreeView.onDidChangeSelection((e) => {
+    console.log("onDidChangeSelection", e);
+    scriptsTreeDataProvider.onSelect(e.selection[0]);
+  });
+
+  const playgroundsTreeDataProvider = new PlaygroundsTreeDataProvider(
+    context.storageUri,
+    diagnosticCollection,
+    variablesViewProvider,
+    scriptsTreeDataProvider,
+    serverUri,
+    outputChannel,
+  );
+
+  const playgroundsTreeView = vscode.window.createTreeView(
+    "playgroundsTreeView",
+    {
+      treeDataProvider: playgroundsTreeDataProvider,
+      showCollapseAll: true,
+      canSelectMany: false,
+    },
+  );
+
+  playgroundsTreeView.onDidChangeSelection(async (e) => {
+    console.log(e);
+    await playgroundsTreeDataProvider.onSelect(e.selection[0]);
+    // scriptsTreeView.reveal(scriptsTreeDataProvider.getDefault(), {
+    //   select: true,
+    // });
+
+    const editor = vscode.window.activeTextEditor;
+    console.log("reveal script", editor);
+    setTimeout(
+      () =>
+        scriptsTreeView.reveal(
+          scriptsTreeDataProvider.getActiveOrDefault(editor.document.uri),
+          {
+            select: true,
+          },
+        ),
+      600,
+    );
+  });
+
+  context.subscriptions.push(playgroundsTreeView);
+  context.subscriptions.push(scriptsTreeView);
 
   const helpTreeDataProvider = new HelpTreeDataProvider();
 
-  const helpTreeView = vscode.window.createTreeView("helpView", {
+  const helpTreeView = vscode.window.createTreeView("helpTreeView", {
     treeDataProvider: helpTreeDataProvider,
     showCollapseAll: true,
     canSelectMany: false,
@@ -83,43 +155,136 @@ export function activate(context: vscode.ExtensionContext) {
     providers.documentFormattingEditProvider,
   );
 
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      console.log("Active Editor Changed: " + editor?.document.fileName);
+
+      if (editor?.document.fileName.startsWith(context.storageUri.fsPath)) {
+        vscode.languages.setTextDocumentLanguage(
+          editor.document,
+          "datatransformer",
+        );
+
+        const playgroundSplits = editor?.document.fileName
+          .substring(context.storageUri.fsPath.length + 1)
+          .split("/");
+
+        console.log(
+          playgroundSplits.length,
+          playgroundSplits[0],
+          playgroundSplits[2],
+        );
+
+        if (playgroundSplits.length > 3) {
+          playgroundsTreeView.reveal(
+            playgroundsTreeDataProvider.getPlayground(
+              playgroundSplits[0],
+              playgroundSplits[2],
+            ),
+            {select: true, focus: false},
+          );
+        } else {
+          playgroundsTreeView.reveal(
+            playgroundsTreeDataProvider.getPlayground(
+              playgroundSplits[0],
+              null,
+            ),
+            {select: true, focus: false},
+          );
+
+          scriptsTreeView.reveal(
+            scriptsTreeDataProvider.getActiveOrDefault(editor.document.uri),
+            {
+              select: true,
+            },
+          );
+        }
+      }
+    }),
+  );
+
   // Register the Commands
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.collapseAll", () => {
-      extvarProvider.collapseAll();
-    }),
+  vscode.commands.registerCommand("datatransformer.deletePlayground", (node) =>
+    playgroundsTreeDataProvider.deletePlayground(node),
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.addExtVar", () => {
-      extvarProvider.addExtVar();
-    }),
+  vscode.commands.registerCommand("datatransformer.addPlayground", () => {
+    playgroundsTreeDataProvider.addPlayground();
+  });
+
+  vscode.commands.registerCommand("datatransformer.importPlayground", () => {
+    playgroundsTreeDataProvider.importPlayground();
+  });
+
+  vscode.commands.registerCommand("datatransformer.takeSnapshot", (node) => {
+    playgroundsTreeDataProvider.takeSnapshot(node);
+  });
+
+  vscode.commands.registerCommand(
+    "datatransformer.exportPlayground",
+    (node) => {
+      playgroundsTreeDataProvider.exportPlayground(node);
+    },
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.expandAll", () => {
-      extvarProvider.expandAll();
-    }),
+  vscode.commands.registerCommand("datatransformer.addScript", async () => {
+    const scriptsTreeItem = await scriptsTreeDataProvider.addScript();
+    scriptsTreeView.reveal(scriptsTreeItem, {select: true});
+  });
+
+  vscode.commands.registerCommand("datatransformer.deleteScript", (node) => {
+    scriptsTreeDataProvider.deleteScript(node);
+  });
+
+  vscode.commands.registerCommand(
+    "datatransformer.selectAndRunScript",
+    async (node) => {
+      console.log("selectAndRunScript", node);
+      await scriptsTreeDataProvider.onSelect(node);
+
+      await scriptsTreeView.reveal(node, {
+        select: true,
+      }),
+        playgroundsTreeDataProvider.exec();
+    },
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.reset", () => {
-      extvarProvider.reset();
-    }),
-  );
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.collapseAll", () => {
+  //     extvarProvider.collapseAll();
+  //   }),
+  // );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.restore", () => {
-      extvarProvider.restore();
-    }),
-  );
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.addExtVar", () => {
+  //     extvarProvider.addExtVar();
+  //   }),
+  // );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.save", () => {
-      extvarProvider.save();
-    }),
-  );
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.expandAll", () => {
+  //     extvarProvider.expandAll();
+  //   }),
+  // );
+
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.reset", () => {
+  //     extvarProvider.reset();
+  //   }),
+  // );
+
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.restore", () => {
+  //     extvarProvider.restore();
+  //   }),
+  // );
+
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("datatransformer.save", () => {
+  //     extvarProvider.save();
+  //   }),
+  // );
 
   let insertSnippetCmd = vscode.commands.registerCommand(
     "datatransformer.insertSnippet",
@@ -140,7 +305,7 @@ local f = import 'functions';
 
   context.subscriptions.push(
     vscode.commands.registerCommand("datatransformer.runScript", () => {
-      extvarProvider.exec();
+      playgroundsTreeDataProvider.exec();
     }),
   );
 
