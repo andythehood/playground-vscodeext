@@ -157,16 +157,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      console.log("Active Editor Changed: " + editor?.document.fileName);
+      console.log("Active Editor Changed: " + editor?.document.uri.path);
 
-      if (editor?.document.fileName.startsWith(context.storageUri.fsPath)) {
+      if (editor?.document.uri.path.startsWith(context.storageUri.path)) {
         vscode.languages.setTextDocumentLanguage(
           editor.document,
           "datatransformer",
         );
 
-        const playgroundSplits = editor?.document.fileName
-          .substring(context.storageUri.fsPath.length + 1)
+        const playgroundSplits = editor?.document.uri.path
+          .substring(context.storageUri.path.length + 1)
           .split("/");
 
         console.log(

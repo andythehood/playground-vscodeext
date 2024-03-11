@@ -357,7 +357,7 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    console.log("Selected folder: " + folderUri[0].fsPath);
+    console.log("Selected folder: " + folderUri[0].path);
     console.log(folderUri[0]);
 
     const d = new Date();
@@ -484,7 +484,7 @@ export class PlaygroundsTreeDataProvider
 
     vscode.window.showOpenDialog(options).then(async (fileUri) => {
       if (fileUri && fileUri[0]) {
-        console.log("Selected file: " + fileUri[0].fsPath);
+        console.log("Selected file: " + fileUri[0].path);
         console.log(fileUri[0]);
 
         const bytes = await vscode.workspace.fs.readFile(fileUri[0]);
@@ -689,17 +689,24 @@ export class PlaygroundsTreeDataProvider
     }
 
     console.log("exec", editor);
-    if (editor?.document.fileName.startsWith(this.storageUri.fsPath)) {
+    if (editor?.document.uri.path.startsWith(this.storageUri.path)) {
       vscode.languages.setTextDocumentLanguage(
         editor.document,
         "datatransformer",
       );
 
-      const playgroundSplits = editor?.document.fileName
-        .substring(this.storageUri.fsPath.length + 1)
+      console.log(
+        "winvsmac",
+        editor?.document.uri.path.substring(this.storageUri.path.length + 1),
+      );
+
+      console.log("separator=", posix.sep);
+      const playgroundSplits = editor?.document.uri.path
+        .substring(this.storageUri.path.length + 1)
         .split("/");
 
       console.log(
+        playgroundSplits,
         playgroundSplits.length,
         playgroundSplits[0],
         playgroundSplits[2],
