@@ -65,7 +65,7 @@ export class LanguageFeaturesProviders {
           const line = parseInt(location.split(":")[0]);
           const charRange = location.split(":")[1];
 
-          console.log(line, charRange);
+          console.log("errmsg", line, charRange);
           let startPos = 0;
           let endPos = 0;
 

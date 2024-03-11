@@ -357,8 +357,7 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    console.log("Selected folder: " + folderUri[0].path);
-    console.log(folderUri[0]);
+    console.log("Selected folder", folderUri[0].path);
 
     const d = new Date();
     const localeDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
@@ -484,8 +483,7 @@ export class PlaygroundsTreeDataProvider
 
     vscode.window.showOpenDialog(options).then(async (fileUri) => {
       if (fileUri && fileUri[0]) {
-        console.log("Selected file: " + fileUri[0].path);
-        console.log(fileUri[0]);
+        console.log("Selected file", fileUri[0]);
 
         const bytes = await vscode.workspace.fs.readFile(fileUri[0]);
         const json = JSON.parse(bytes.toString());
@@ -715,14 +713,6 @@ export class PlaygroundsTreeDataProvider
       let playgroundTreeItem: PlaygroundTreeItem;
 
       if (playgroundSplits.length > 3) {
-        // console.log(
-        //   "reveals",
-        //   playgroundsTreeDataProvider.getSnapshot(
-        //     playgroundSplits[0],
-        //     playgroundSplits[2],
-        //   ),
-        // );
-
         playgroundTreeItem = this.getPlayground(
           playgroundSplits[0],
           playgroundSplits[2],

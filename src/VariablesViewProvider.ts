@@ -52,7 +52,7 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
 
-    console.log(context.state);
+    console.log("context.state", context.state);
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 

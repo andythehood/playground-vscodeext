@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   playgroundsTreeView.onDidChangeSelection(async (e) => {
-    console.log(e);
+    console.log("onDidChangeSelection", e);
     await playgroundsTreeDataProvider.onSelect(e.selection[0]);
     // scriptsTreeView.reveal(scriptsTreeDataProvider.getDefault(), {
     //   select: true,
