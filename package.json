@@ -1,5 +1,5 @@
 {
-  "name": "appint",
+  "name": "datatransformer-playground",
   "displayName": "Data Transformer Playground",
   "publisher": "andythehood@gmail.com",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
@@ -175,17 +175,30 @@
         "title": "Run Script",
         "when": "editorLangId == datatransformer || view == scriptsTreeView",
         "icon": "$(play-circle)"
+      },
+      {
+        "command": "datatransformer.runScript",
+        "title": "Run Script",
+        "enablement": "editorLangId == datatransformer",
+        "icon": "$(play-circle)"
       }
     ],
     "keybindings": [
       {
         "command": "datatransformer.runScript",
-        "key": "ctrl+shift+i",
-        "mac": "cmd+shift+i",
-        "xwhen": "editorLangId == datatransformer || view == scriptsTreeView"
+        "key": "alt+shift+r",
+        "mac": "alt+shift+r",
+        "when": "editorLangId == datatransformer"
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "datatransformer.runScript",
+          "group": "navigation",
+          "when": "resourceLangId == datatransformer"
+        }
+      ],
       "view/title": [
         {
           "command": "datatransformer.addPlayground",

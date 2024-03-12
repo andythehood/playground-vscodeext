@@ -1225,7 +1225,7 @@ Behaves like std.base64DecodeBytes() except returns a naively encoded string ins
   {
     label: "trace",
     detail: "trace(str, rest)",
-    documentation: `Outputs the given string str to stderr and returns rest as the result.
+    documentation: `Writes the given string str to the Data Transformer Output window and returns rest as the result.
 
 Example:
 
@@ -1242,7 +1242,7 @@ local conditionalReturn(cond, in1, in2) =
 }
 Prints:
 
-TRACE: test.jsonnet:3 cond is true returning {"b": true}
+TRACE: default:3 cond is true returning {"b": true}
 {
     "a": {
         "b": true

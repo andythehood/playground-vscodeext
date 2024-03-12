@@ -4,16 +4,16 @@ The Data Transformer Playground extension enables you to develop, debug and test
 
 The Data Transformer Script task in Google Cloud Application Integration provides Jsonnet based data mapping. The task allows you to create Jsonnet scripts that define the mapping relationships for the specified source and target integration variables in your integrations.
 
-This extension is designed to assist in the development and testing of those Jsonnet scripts by allowing you to create playgrounds, develop scripts, define external variables and test them against the Data Transformer Playground Jsonnet engine.
+This extension is intended to assist in the development and testing of those Jsonnet scripts. It allows you to create playgrounds, develop scripts, define external variables and test them against the Data Transformer Playground Jsonnet engine.
 
 ## Features
 
 - **Jsonnet Language Support** provides basic Jsonnet language support including colorization, syntax highlighting and semantic tokens for the Standard and additional Functions libraries.
 - **Code completion** provides snippets and context sensitive help for the Standard and additional Functions libraries.
-- **Document Formatting** using the [go-jsonnet](https://pkg.go.dev/github.com/google/go-jsonnet) formatter with default options.
+- **Document Formatting** using the [go-jsonnet](https://pkg.go.dev/github.com/google/go-jsonnet) formatter with its default options.
 - **Snapshots** allow a point in time copy of a playground to be taken.
 - **Import and Export** of Playgrounds in JSON format for collaboration and sharing. Playground files are compatible with the [Data Transformer Web Application](https://datatransformer-playground.web.app).
-- **Tracing** support for the `std.trace()` function, with trace output copied to the Data Transformer Output window.
+- **Tracing** support for the `std.trace()` function, with the trace output copied to the Data Transformer Output window.
 
 ## Requirements
 

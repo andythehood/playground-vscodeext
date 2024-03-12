@@ -1,8 +1,0 @@
-local f = import 'functions';
-
-
-{
-  uu: f.uuid(),
-
-
-}

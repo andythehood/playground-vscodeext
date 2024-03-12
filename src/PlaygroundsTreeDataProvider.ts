@@ -867,8 +867,9 @@ ${data.message}
         this.panel.webview.html = html;
       }
     } else {
-      console.log("editor document not under playground dir");
-      console.log(editor?.document.uri.path, this.playgroundsRootUri.path);
+      vscode.window.showWarningMessage(
+        "Datatransformer script is not part of a plyground",
+      );
     }
   }
 }
