@@ -159,7 +159,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       console.log("Active Editor Changed: " + editor?.document.uri.path);
 
-      if (editor?.document.uri.path.startsWith(context.storageUri.path)) {
+      if (
+        editor?.document.uri.path
+          .toLowerCase()
+          .startsWith(context.storageUri.path.toLowerCase())
+      ) {
         vscode.languages.setTextDocumentLanguage(
           editor.document,
           "datatransformer",
@@ -245,8 +249,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       await scriptsTreeView.reveal(node, {
         select: true,
-      }),
-        playgroundsTreeDataProvider.exec();
+      });
+      playgroundsTreeDataProvider.exec();
     },
   );
 

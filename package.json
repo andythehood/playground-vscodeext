@@ -175,12 +175,6 @@
         "title": "Data Transformer Playground: Run Script",
         "when": "editorLangId == datatransformer || view == scriptsTreeView",
         "icon": "$(play-circle)"
-      },
-      {
-        "command": "datatransformer.selectAndRunScript",
-        "title": "Data Transformer Playground: Run Script",
-        "when": "editorLangId == datatransformer || view == scriptsTreeView",
-        "icon": "$(play-circle)"
       }
     ],
     "keybindings": [

@@ -687,18 +687,16 @@ export class PlaygroundsTreeDataProvider
     }
 
     console.log("exec", editor);
-    if (editor?.document.uri.path.startsWith(this.storageUri.path)) {
+    if (
+      editor?.document.uri.path
+        .toLowerCase()
+        .startsWith(this.storageUri.path.toLowerCase())
+    ) {
       vscode.languages.setTextDocumentLanguage(
         editor.document,
         "datatransformer",
       );
 
-      console.log(
-        "winvsmac",
-        editor?.document.uri.path.substring(this.storageUri.path.length + 1),
-      );
-
-      console.log("separator=", posix.sep);
       const playgroundSplits = editor?.document.uri.path
         .substring(this.storageUri.path.length + 1)
         .split("/");
@@ -733,6 +731,7 @@ export class PlaygroundsTreeDataProvider
       )}'`;
 
       const body = {
+        script: basename(editor.document.fileName),
         snippet: editor.document.getText(),
         extVars: extVars,
       };
@@ -751,7 +750,13 @@ export class PlaygroundsTreeDataProvider
         if (data.status !== 200) {
           //diagnostics
 
-          const location = data.message.substring(0, data.message.indexOf(" "));
+          const errorMessage = data.message.substring(
+            basename(editor.document.fileName).length + 1,
+          );
+
+          console.log(errorMessage);
+
+          const location = errorMessage.substring(0, errorMessage.indexOf(" "));
 
           const line = parseInt(location.split(":")[0]);
           const charRange = location.split(":")[1];
@@ -773,7 +778,7 @@ export class PlaygroundsTreeDataProvider
               new vscode.Position(line - 1, startPos - 1),
               new vscode.Position(line - 1, endPos - 1),
             ),
-            data.message.substring(data.message.indexOf(" ") + 1),
+            errorMessage.substring(errorMessage.indexOf(" ") + 1),
             vscode.DiagnosticSeverity.Error,
           );
 
@@ -844,6 +849,9 @@ ${data.message}
 
         this.panel.webview.html = html;
       }
+    } else {
+      console.log("editor document not under playground dir");
+      console.log(editor?.document.uri.path, this.storageUri.path);
     }
   }
 }
