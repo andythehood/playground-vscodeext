@@ -21,6 +21,7 @@ import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
 import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
 import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
+import {posix} from "path";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -33,9 +34,19 @@ export function activate(context: vscode.ExtensionContext) {
   const workbenchConfig = vscode.workspace.getConfiguration(
     "datatransformer.playground",
   );
-  let serverUri: string =
-    workbenchConfig?.get("serverUri") ||
+  const serverUrl: string =
+    workbenchConfig?.get("serverUrl") ||
     "https://datatransformer-playground.web.app";
+
+  const playgroundFolder: string =
+    workbenchConfig?.get("playgroundStorageLocation") || "";
+
+  const playgroundsRootUri = context.storageUri.with({
+    path: posix.join(
+      playgroundFolder || context.storageUri.path,
+      "playgrounds",
+    ),
+  });
 
   const diagnosticCollection =
     vscode.languages.createDiagnosticCollection("datatransformer");
@@ -66,9 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  const scriptsTreeDataProvider = new ScriptsTreeDataProvider(
-    context.storageUri,
-  );
+  const scriptsTreeDataProvider = new ScriptsTreeDataProvider();
 
   const scriptsTreeView = vscode.window.createTreeView("scriptsTreeView", {
     treeDataProvider: scriptsTreeDataProvider,
@@ -81,11 +90,11 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const playgroundsTreeDataProvider = new PlaygroundsTreeDataProvider(
-    context.storageUri,
+    playgroundsRootUri,
     diagnosticCollection,
     variablesViewProvider,
     scriptsTreeDataProvider,
-    serverUri,
+    serverUrl,
     outputChannel,
   );
 
@@ -136,7 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(helpTreeView);
 
   const providers = new LanguageFeaturesProviders(
-    serverUri,
+    serverUrl,
     diagnosticCollection,
   );
   vscode.languages.registerHoverProvider(
@@ -162,7 +171,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (
         editor?.document.uri.path
           .toLowerCase()
-          .startsWith(context.storageUri.path.toLowerCase())
+          .startsWith(playgroundsRootUri.path.toLowerCase())
       ) {
         vscode.languages.setTextDocumentLanguage(
           editor.document,
@@ -170,7 +179,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
 
         const playgroundSplits = editor?.document.uri.path
-          .substring(context.storageUri.path.length + 1)
+          .substring(playgroundsRootUri.path.length + 1)
           .split("/");
 
         console.log(
@@ -213,13 +222,34 @@ export function activate(context: vscode.ExtensionContext) {
     playgroundsTreeDataProvider.deletePlayground(node),
   );
 
-  vscode.commands.registerCommand("datatransformer.addPlayground", () => {
-    playgroundsTreeDataProvider.addPlayground();
+  vscode.commands.registerCommand("datatransformer.addPlayground", async () => {
+    const playground = await playgroundsTreeDataProvider.addPlayground();
+
+    console.log("addPlayground", playground);
+    setTimeout(
+      () =>
+        playgroundsTreeView.reveal(
+          playgroundsTreeDataProvider.getPlayground(playground, null),
+          {select: true, focus: false},
+        ),
+      200,
+    );
   });
 
-  vscode.commands.registerCommand("datatransformer.importPlayground", () => {
-    playgroundsTreeDataProvider.importPlayground();
-  });
+  vscode.commands.registerCommand(
+    "datatransformer.importPlayground",
+    async () => {
+      const playground = await playgroundsTreeDataProvider.importPlayground();
+      setTimeout(
+        () =>
+          playgroundsTreeView.reveal(
+            playgroundsTreeDataProvider.getPlayground(playground, null),
+            {select: true, focus: false},
+          ),
+        200,
+      );
+    },
+  );
 
   vscode.commands.registerCommand("datatransformer.takeSnapshot", (node) => {
     playgroundsTreeDataProvider.takeSnapshot(node);

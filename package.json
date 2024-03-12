@@ -2,9 +2,9 @@
   "name": "appint",
   "displayName": "Data Transformer Playground",
   "publisher": "andythehood@gmail.com",
-  "description": "Application Integration Extension",
+  "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
@@ -52,7 +52,7 @@
       "activitybar": [
         {
           "id": "playground-sidebar-view",
-          "title": "Application Integration",
+          "title": "Data Transformer Playground",
           "icon": "media/icon.svg"
         }
       ]
@@ -69,7 +69,7 @@
         {
           "id": "scriptsTreeView",
           "type": "tree",
-          "name": "Data Transformer Scripts",
+          "name": "Jsonnet Scripts",
           "visibility": "visible"
         },
         {
@@ -94,7 +94,7 @@
       {
         "view": "playgroundsTreeView",
         "when": "workspaceFolderCount == 0",
-        "contents": "No Workspace or Folder open. Please open a VSCode Workspace or Folder to use Data Transformer Playgrounds."
+        "contents": "No Workspace or Folder open. Please open a Workspace or Folder to use Data Transformer Playgrounds."
       },
       {
         "view": "scriptsTreeView",
@@ -172,7 +172,7 @@
       },
       {
         "command": "datatransformer.selectAndRunScript",
-        "title": "Data Transformer Playground: Run Script",
+        "title": "Run Script",
         "when": "editorLangId == datatransformer || view == scriptsTreeView",
         "icon": "$(play-circle)"
       }
@@ -189,12 +189,12 @@
       "view/title": [
         {
           "command": "datatransformer.addPlayground",
-          "when": "view == playgroundsTreeView",
+          "when": "view == playgroundsTreeView && workspaceFolderCount > 0",
           "group": "navigation@1"
         },
         {
           "command": "datatransformer.importPlayground",
-          "when": "view == playgroundsTreeView",
+          "when": "view == playgroundsTreeView && workspaceFolderCount > 0",
           "group": "navigation@2"
         },
         {
@@ -214,7 +214,7 @@
         },
         {
           "command": "datatransformer.expandAll",
-          "when": "view == variablesWebView",
+          "when": "view == variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@2"
         }
       ],
@@ -249,10 +249,15 @@
     "configuration": {
       "title": "Data Transformer Playground",
       "properties": {
-        "datatransformer.playground.serverUri": {
+        "datatransformer.playground.serverUrl": {
           "type": "string",
-          "description": "URI of the Data Transformer Server",
+          "description": "URL of the Data Transformer Server",
           "default": "https://datatransformer-playground.web.app"
+        },
+        "datatransformer.playground.playgroundStorageLocation": {
+          "type": "string",
+          "description": "Local folder for storing playgrounds.\n\nIf not specified, defaults to a Workspace specific storage location (ExtensionContext.storageUri).\n\n* Reopen the workspace after changing this value *",
+          "default": ""
         }
       }
     }

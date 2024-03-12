@@ -38,8 +38,8 @@ export class ScriptsTreeDataProvider
   private textEncoder = new TextEncoder();
   private scriptsDirUri: vscode.Uri | null = null;
 
-  constructor(private readonly storageUri: vscode.Uri) {
-    console.log("constructor", storageUri);
+  constructor() {
+    console.log("constructor");
 
     this.data = [];
   }
@@ -99,7 +99,7 @@ export class ScriptsTreeDataProvider
 
       setTimeout(() => {
         this.data = scriptDirEntries.map((script) => {
-          const scriptUri = this.storageUri.with({
+          const scriptUri = scriptsDirUri.with({
             path: posix.join(scriptsDirUri.path, script[0]),
           });
 
