@@ -11,13 +11,13 @@ This extension is intended to assist in the development and testing of those Jso
 - **Jsonnet Language Support** provides basic Jsonnet language support including colorization, syntax highlighting and semantic tokens for the Standard and additional Functions libraries.
 - **Code completion** provides snippets and context sensitive help for the Standard and additional Functions libraries.
 - **Document Formatting** using the [go-jsonnet](https://pkg.go.dev/github.com/google/go-jsonnet) formatter with its default options.
-- **Snapshots** allow a point in time copy of a playground to be taken.
+- **Snapshots** allow point in time copies of a playground to be taken.
 - **Import and Export** of Playgrounds in JSON format for collaboration and sharing. Playground files are compatible with the [Data Transformer Web Application](https://datatransformer-playground.web.app).
 - **Tracing** support for the `std.trace()` function, with the trace output copied to the Data Transformer Output window.
 
 ## Requirements
 
-The Data Transformer Playground requires internet access to the Data Transformer Playground server URL - default https://datatransformer-playground.web.app.
+The Data Transformer Playground requires internet access to the Data Transformer Playground server at https://datatransformer-playground.web.app.
 
 Playgrounds, scripts and variables defintions are stored in a local, workspace specific, storage location where the extension has read/write access. By default, this is the location defined by the Workspace's ExtensionContext.storageUri setting. Please see the Visual Studio Code documentation for [Data Storage](https://code.visualstudio.com/api/extension-capabilities/common-capabilities#data-storage) for more information.
 

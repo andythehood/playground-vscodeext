@@ -119,7 +119,7 @@ export function activate(context: vscode.ExtensionContext) {
     setTimeout(
       () =>
         scriptsTreeView.reveal(
-          scriptsTreeDataProvider.getActiveOrDefault(editor.document.uri),
+          scriptsTreeDataProvider.getActiveOrDefault(editor?.document.uri),
           {
             select: true,
           },
@@ -206,7 +206,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
 
           scriptsTreeView.reveal(
-            scriptsTreeDataProvider.getActiveOrDefault(editor.document.uri),
+            scriptsTreeDataProvider.getActiveOrDefault(editor?.document.uri),
             {
               select: true,
             },

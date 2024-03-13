@@ -242,7 +242,7 @@ export class PlaygroundsTreeDataProvider
     const index = tabs.findIndex(
       (tab) =>
         tab.input instanceof vscode.TabInputText &&
-        tab.input.uri.path === file.path,
+        tab.input.uri.path.toLowerCase() === file.path.toLowerCase(),
     );
     if (index !== -1) {
       await vscode.window.tabGroups.close(tabs[index]);

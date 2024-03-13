@@ -62,7 +62,14 @@ export class ScriptsTreeDataProvider
   getActiveOrDefault(uri: vscode.Uri): ScriptsTreeItem {
     console.log("getDefault", uri, this.data);
 
-    return this.data.find((item) => item.uri.path === uri.path) || this.data[0];
+    if (!uri) {
+      return this.data[0];
+    }
+    return (
+      this.data.find(
+        (item) => item.uri.path.toLowerCase() === uri.path.toLowerCase(),
+      ) || this.data[0]
+    );
   }
 
   getTreeItem(
@@ -121,7 +128,7 @@ export class ScriptsTreeDataProvider
     const index = tabs.findIndex(
       (tab) =>
         tab.input instanceof vscode.TabInputText &&
-        tab.input.uri.path === file.path,
+        tab.input.uri.path.toLowerCase() === file.path.toLowerCase(),
     );
     if (index !== -1) {
       await vscode.window.tabGroups.close(tabs[index]);
