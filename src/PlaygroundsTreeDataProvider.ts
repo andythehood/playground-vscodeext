@@ -40,13 +40,6 @@ export class PlaygroundTreeItem extends vscode.TreeItem {
     parent: string,
     children?: PlaygroundTreeItem[],
   ) {
-    // super(
-    //   label,
-    //   children === undefined
-    //     ? vscode.TreeItemCollapsibleState.None
-    //     : vscode.TreeItemCollapsibleState.Collapsed,
-    // );
-
     super(label, collapsibleState);
 
     this.children = children;
@@ -64,11 +57,11 @@ export class PlaygroundTreeItem extends vscode.TreeItem {
       ? "PlaygroundTreeitem"
       : "PlaygroundTreeitem_Snapshot";
 
-  public async onClick(): Promise<void> {
-    // if (this.url) {
-    //   await vscode.env.openExternal(vscode.Uri.parse(this.url));
-    // }
-  }
+  // public async onClick(): Promise<void> {
+  //   // if (this.url) {
+  //   //   await vscode.env.openExternal(vscode.Uri.parse(this.url));
+  //   // }
+  // }
 }
 
 export class PlaygroundsTreeDataProvider
@@ -87,9 +80,6 @@ export class PlaygroundsTreeDataProvider
     private readonly outputChannel: vscode.OutputChannel,
   ) {
     console.log("constructor", playgroundsRootUri);
-    // this.playgroundsRootUri = playgroundsRootUri;
-    // this.variablesProvider = variablesProvider;
-    // this.scriptsProvider = scriptsProvider;
 
     this.data = [];
   }
@@ -104,9 +94,6 @@ export class PlaygroundsTreeDataProvider
       return this.data.find((item) => item.label.toString() === element.parent);
     }
   }
-  // resolveTreeItem?(item: vscode.TreeItem, element: PlaygroundTreeItem, token: vscode.CancellationToken): vscode.ProviderResult<vscode.TreeItem> {
-  //   throw new Error("Method not implemented.");
-  // }
 
   private _onDidChangeTreeData: vscode.EventEmitter<
     PlaygroundTreeItem | undefined | null | void
@@ -149,12 +136,6 @@ export class PlaygroundsTreeDataProvider
     }
   }
 
-  // getParent(element: PlaygroundTreeItem): vscode.ProviderResult<PlaygroundTreeItem>
-  // {
-  //     if (element.label == 'cars') return undefined;
-  //     return this.data[0];
-  // }
-
   async getChildren(
     element?: PlaygroundTreeItem | undefined,
   ): Promise<PlaygroundTreeItem[]> {
@@ -168,9 +149,6 @@ export class PlaygroundsTreeDataProvider
           for (const [name, type] of await vscode.workspace.fs.readDirectory(
             this.playgroundsRootUri,
           )) {
-            // vscode.window.showInformationMessage(
-            //   `getChildren ${name}, ${type}`,
-            // );
             console.log("readDirectory", name, type);
 
             if (type !== vscode.FileType.Directory) {
@@ -188,9 +166,6 @@ export class PlaygroundsTreeDataProvider
             const scriptDirEntries = await vscode.workspace.fs.readDirectory(
               snapshotsDirUri,
             );
-
-            // const bytes = await vscode.workspace.fs.readFile(playgroundMetaUri);
-            // const json = JSON.parse(bytes.toString());
 
             const children = scriptDirEntries.map((snapshot) => {
               const snapshotDirUri = snapshotsDirUri.with({
@@ -220,9 +195,6 @@ export class PlaygroundsTreeDataProvider
                 playgroundDirUri,
                 null,
                 children,
-
-                // json.scripts || [{name: "default", snippet: json.snippet}],
-                // json.extVars,
               ),
             );
           }
@@ -429,7 +401,6 @@ export class PlaygroundsTreeDataProvider
           snippet: bytes.toString(),
           errorMessage: "",
         };
-
         scripts.push(script);
       }
 
@@ -452,7 +423,6 @@ export class PlaygroundsTreeDataProvider
 
         scripts.push(script);
       }
-
       return scripts;
     };
 
@@ -485,7 +455,6 @@ export class PlaygroundsTreeDataProvider
 
         snapshots.push(s);
       }
-
       return snapshots;
     };
 
@@ -511,12 +480,6 @@ export class PlaygroundsTreeDataProvider
 
     const doc = await vscode.workspace.openTextDocument(fileUri);
     vscode.window.showTextDocument(doc, {preview: false});
-
-    // const doc = await vscode.workspace.openTextDocument({
-    //   language: "json",
-    //   content: JSON.stringify(playgroundExport, null, 2),
-    // });
-    // const editor = await vscode.window.showTextDocument(doc);
     vscode.window.showInformationMessage("Playground exported");
   }
 
@@ -579,45 +542,34 @@ export class PlaygroundsTreeDataProvider
     }
   }
 
-  public async onSelect(element: PlaygroundTreeItem): Promise<void> {
-    if (!element) {
+  public async onSelect(node: PlaygroundTreeItem): Promise<void> {
+    if (!node) {
       vscode.commands.executeCommand(
         "setContext",
         "datatransformer.playgroundSelected",
         false,
       );
 
-      this.variablesProvider.showIntro(false);
       this.variablesProvider.set(null);
       this.scriptsProvider.set(null);
-    } else if (element.type === TreeItemType.Playground) {
+    } else if (node.type === TreeItemType.Playground) {
       vscode.commands.executeCommand(
         "setContext",
         "datatransformer.playgroundSelected",
         true,
       );
 
-      this.variablesProvider.showIntro(true);
-
-      this.variablesProvider.set(element.uri);
-      await this.scriptsProvider.set(element.uri);
-    } else if (element.type === TreeItemType.Snapshot) {
+      this.variablesProvider.set(node.uri);
+      await this.scriptsProvider.set(node.uri);
+    } else if (node.type === TreeItemType.Snapshot) {
       vscode.commands.executeCommand(
         "setContext",
         "datatransformer.playgroundSelected",
         true,
       );
 
-      this.variablesProvider.showIntro(true);
-
-      this.variablesProvider.set(element.uri);
-      await this.scriptsProvider.set(element.uri);
-
-      // const parent = this.data.find((node) => node.fileUri === element.fileUri);
-      // if (parent) {
-      //   this.variablesProvider.set(parent.extVars);
-      //   this.scriptsProvider.set(parent.scripts);
-      // }
+      this.variablesProvider.set(node.uri);
+      await this.scriptsProvider.set(node.uri);
     }
   }
 
@@ -828,9 +780,7 @@ export class PlaygroundsTreeDataProvider
 </head>
 <body>
 <pre>
-<code style="background-color: transparent;font-size: 12px;">
-${data.message}
-</code>
+<code style="background-color: transparent;font-size: 12px;">${data.message}</code>
 </pre>
 </body>
 </html>`;
@@ -859,8 +809,9 @@ ${data.message}
 <head>
 </head>
 <body>
-<pre><code style="background-color: transparent;font-size: 12px;">${e.message} ${e.cause}
-</code></pre>
+<pre>
+<code style="background-color: transparent;font-size: 12px;">${e.message} ${e.cause}</code>
+</pre>
 </body>
 </html>`;
 
@@ -868,7 +819,7 @@ ${data.message}
       }
     } else {
       vscode.window.showWarningMessage(
-        "Datatransformer script is not part of a plyground",
+        "Script is not part of an open playground",
       );
     }
   }

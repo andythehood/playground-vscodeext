@@ -45,14 +45,40 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
   ) {
     this._view = webviewView;
 
+    console.log("resolveWebviewView", context.state);
+
+    webviewView.onDidChangeVisibility(async () => {
+      console.log("onDidChangeVisibility", webviewView.visible);
+
+      if (webviewView.visible) {
+        if (this.extVarsUri) {
+          const bytes = await vscode.workspace.fs.readFile(this.extVarsUri);
+          const extVars = JSON.parse(bytes.toString());
+          if (this._view) {
+            this._view.webview.postMessage({
+              type: "set",
+              playgroundSelected: true,
+              extVars: extVars,
+            });
+          } else {
+            if (this._view) {
+              this._view.webview.postMessage({
+                type: "set",
+                playgroundSelected: false,
+                extVars: [],
+              });
+            }
+          }
+        }
+      }
+    });
+
     webviewView.webview.options = {
       // Allow scripts in the webview
       enableScripts: true,
 
       localResourceRoots: [this._extensionUri],
     };
-
-    console.log("context.state", context.state);
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
@@ -64,7 +90,9 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
           if (this.extVarsUri) {
             await vscode.workspace.fs.writeFile(
               this.extVarsUri,
-              this.textEncoder.encode(JSON.stringify(data.value, null, 2)),
+              this.textEncoder.encode(
+                JSON.stringify(data.value.extVars, null, 2),
+              ),
             );
           }
           break;
@@ -104,19 +132,22 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
 
       const bytes = await vscode.workspace.fs.readFile(extVarsUri);
       extVars = JSON.parse(bytes.toString());
+      if (this._view) {
+        this._view.webview.postMessage({
+          type: "set",
+          playgroundSelected: true,
+          extVars: extVars,
+        });
+      }
     } else {
       this.extVarsUri = null;
-    }
-
-    if (this._view) {
-      this._view.webview.postMessage({type: "set", extVars: extVars});
-    }
-  }
-
-  public showIntro(value: boolean) {
-    console.log("showIntro", value);
-    if (this._view) {
-      this._view.webview.postMessage({type: "showIntro", value: value});
+      if (this._view) {
+        this._view.webview.postMessage({
+          type: "set",
+          playgroundSelected: false,
+          extVars: [],
+        });
+      }
     }
   }
 
@@ -140,16 +171,6 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
     const codiconUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, "media", "codicon.css"),
     );
-
-    // const codiconsUri = webview.asWebviewUri(
-    //   vscode.Uri.joinPath(
-    //     this._extensionUri,
-    //     "node_modules",
-    //     "@vscode/codicons",
-    //     "dist",
-    //     "codicon.css",
-    //   ),
-    // );
 
     // Use a nonce to only allow a specific script to be run.
     const nonce = getNonce();
@@ -177,7 +198,7 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
 			</head>
 			<body>
         <div id="intro_default"
-          <p>Please select a playground</p>
+          <p>Please select a playground.</p>
         </div>
         <div id="intro"
           <p>Define variables that will be passed to the Data Transformer Jsonnet engine</p>
@@ -186,33 +207,30 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
           <br/>
         </div>
 
-        <div id="addExtvar">
+        <div id="addextvar-panel">
 
-          <div id="addextvar-panel">
+          <p class="addextvar-title" >Name:</p>
+          <textarea  id="addextvar-name" rows="1" placeholder="Enter name..."  ></textarea>
 
-            <p class="addextvar-title" >Name:</p>
-            <textarea  id="addextvar-name" rows="1" placeholder="Enter name..."  ></textarea>
+          <fieldset id="addextvar-radiogroup">
+            <legend class="addextvar-title">Type:</legend>
+              <input class="addextvar-radio" type="radio" id="string" name="string" value="string" checked ">
+              <label class="addextvar-label"  for="string">String</label>
+              <input class="addextvar-radio" type="radio" id="json" name="json" value="json" />
+              <label class="addextvar-label" for="json">Json</label>
+              <input class="addextvar-radio" type="radio" id="array" name="array" value="array" />
+              <label class="addextvar-label" for="array">Array</label>
+              <input class="addextvar-radio" type="radio" id="int" name="int" value="int" />
+              <label class="addextvar-label" for="int">Integer</label>
+              <input class="addextvar-radio" type="radio" id="double" name="double" value="double" />
+              <label class="addextvar-label" for="double">Double</label>
+          </fieldset>
 
-            <fieldset id="addextvar-radiogroup">
-              <legend class="addextvar-title">Type:</legend>
-                <input class="addextvar-radio" type="radio" id="string" name="string" value="string" checked ">
-                <label class="addextvar-label"  for="string">String</label>
-                <input class="addextvar-radio" type="radio" id="json" name="json" value="json" />
-                <label class="addextvar-label" for="json">Json</label>
-                <input class="addextvar-radio" type="radio" id="array" name="array" value="array" />
-                <label class="addextvar-label" for="array">Array</label>
-                <input class="addextvar-radio" type="radio" id="int" name="int" value="int" />
-                <label class="addextvar-label" for="int">Integer</label>
-                <input class="addextvar-radio" type="radio" id="double" name="double" value="double" />
-                <label class="addextvar-label" for="double">Double</label>
-            </fieldset>
+          <p class="addextvar-title">Value:</p>
+          <textarea id="addextvar-value" placeholder="Enter value..." ></textarea>
+          <button id="addextvar-cancel" >Cancel</button>
+          <button id="addextvar-add" >Add</button>
 
-            <p class="addextvar-title">Value:</p>
-            <textarea id="addextvar-value" placeholder="Enter value..." ></textarea>
-            <button id="addextvar-cancel" >Cancel</button>
-            <button id="addextvar-add" >Add</button>
-
-          </div>
         </div>
 
         <ul id="extvarUL">

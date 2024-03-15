@@ -222,7 +222,7 @@
         },
         {
           "command": "datatransformer.collapseAll",
-          "when": "view == variablesWebView",
+          "when": "view == variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@3"
         },
         {

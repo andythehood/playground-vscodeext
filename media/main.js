@@ -6,23 +6,35 @@
   // @ts-ignore
   const vscode = acquireVsCodeApi();
 
-  const j = {
-    firstName: "John",
-    lastName: "Doe",
-  };
-
   const extVarsDefault = [];
 
-  const oldState = vscode.getState() || {extvars: extVarsDefault};
+  console.log("vscode.getState()");
+
+  let state = vscode.getState() || {extVars: extVarsDefault};
+
+  // if (!state.extVars) {
+  //   state = {extVars: extVarsDefault};
+  //   vscode.setState(state);
+  // }
+
+  showIntro(state.playgroundSelected || false);
 
   let extVarName = "";
   let extVarType = "string";
   let extVarValue = "";
 
-  /** @type {Array<{ name:string, type:string, value: string , open?: boolean}>} */
-  let extvarsState = oldState.extvars;
+  // /** @type {Array<{ name:string, type:string, value: string , open?: boolean}>} */
 
-  updateExtVars(extvarsState);
+  // if (oldState.extvars) {
+  //   vscode.setState(oldState.extvars);
+  //   extvarsState = oldState.extvars;
+  // } else {
+  //   extvarsState = oldState;
+  // }
+
+  if (state.playgroundSelected) {
+    updateExtVars(state.extVars);
+  }
 
   // Setup event listener for the Add New External Variable Button
 
@@ -30,15 +42,40 @@
     ?.getElementById("addextvar-button")
     ?.addEventListener("click", () => {
       addExtvar();
+      document.getElementById("addextvar-name")?.focus();
     });
 
   // Setup event listeners for the Add New External Variable Form
 
+  // document
+  //   ?.getElementById("addextvar-name")
+  //   ?.addEventListener("change", function (e) {
+  //     console.log("wtf");
+
+  //     // @ts-ignore
+  //     extVarName = e.target?.value;
+
+  //   });
+
   document
     ?.getElementById("addextvar-name")
-    ?.addEventListener("change", function (e) {
+    ?.addEventListener("input", function (e) {
+      console.log("input");
+
       // @ts-ignore
       extVarName = e.target?.value;
+      const addBtn = document?.getElementById("addextvar-add");
+      if (addBtn) {
+        if (extVarName) {
+          // @ts-ignore
+          addBtn.disabled = false;
+          addBtn.style.backgroundColor = "#0077D4";
+        } else {
+          // @ts-ignore
+          addBtn.disabled = true;
+          addBtn.style.backgroundColor = "#666666";
+        }
+      }
     });
 
   var radioButtons = document.getElementsByClassName("addextvar-radio");
@@ -56,18 +93,20 @@
   document
     ?.getElementById("addextvar-cancel")
     ?.addEventListener("click", () => {
-      const ev = document.getElementById("addExtvar");
-      if (ev) {
-        ev.style.display = "none";
+      const panel = document.getElementById("addextvar-panel");
+      if (panel) {
+        panel.style.display = "none";
       }
     });
 
   document?.getElementById("addextvar-add")?.addEventListener("click", () => {
-    const ev = document.getElementById("addExtvar");
-    if (ev) {
-      ev.style.display = "none";
+    if (extVarName) {
+      const panel = document.getElementById("addextvar-panel");
+      if (panel) {
+        panel.style.display = "none";
+      }
+      newExtVar();
     }
-    newExtVar();
   });
 
   // Handle messages sent from the extension to the webview
@@ -76,27 +115,35 @@
     switch (message.type) {
       case "addExtVar": {
         addExtvar();
+        document.getElementById("addextvar-name")?.focus();
+        vscode.setState(state);
+        vscode.postMessage({type: "stateUpdated", value: state});
         break;
       }
       case "collapseAll": {
         collapseAll();
+        vscode.setState(state);
+        vscode.postMessage({type: "stateUpdated", value: state});
         break;
       }
       case "expandAll": {
         expandAll();
+        vscode.setState(state);
+        vscode.postMessage({type: "stateUpdated", value: state});
         break;
       }
-      case "reset": {
-        console.log("reset");
-        extvarsState = extVarsDefault;
-        updateExtVars(extvarsState);
-        break;
-      }
+      // case "reset": {
+      //   console.log("reset");
+      //   extvarsState = extVarsDefault;
+      //   updateExtVars(extvarsState);
+      //   break;
+      // }
 
       case "set": {
         console.log("set");
-        extvarsState = message.extVars;
-        updateExtVars(extvarsState);
+        // let extvarsState = message.extVars;
+        showIntro(message.playgroundSelected);
+        updateExtVars(message.extVars);
         break;
       }
 
@@ -130,14 +177,19 @@
       if (intro_def) {
         intro_def.style.display = "block";
       }
+
+      const ev = document.getElementById("addextvar-panel");
+      if (ev) {
+        ev.style.display = "none";
+      }
     }
   }
 
   /**
-   * @param {Array<{ name:string, type:string, value: string , open?: boolean} >} extvars
+   * @param {Array<{ name:string, type:string, value: string , open?: boolean} >} extVars
    */
-  function updateExtVars(extvars) {
-    console.log("eve=", extvars);
+  function updateExtVars(extVars) {
+    console.log("eve=", extVars);
 
     const ul = document.getElementById("extvarUL");
     if (!ul) {
@@ -145,14 +197,14 @@
       return;
     }
 
-    console.log(extvars.length);
+    console.log(extVars.length);
 
     ul.textContent = "";
-    for (const extvar of extvars) {
+    for (const extVar of extVars) {
       const li = document.createElement("li");
       const i1 = document.createElement("i");
       i1.className = "chevron codicon codicon-chevron-right";
-      if (extvar.open) {
+      if (extVar.open) {
         i1.classList.add("chevron-down");
       }
       i1.addEventListener("click", function () {
@@ -165,21 +217,21 @@
           ?.classList.toggle("trash-hidden");
         this.classList.toggle("chevron-down");
 
-        var result = extvarsState.find((x) => x.name === extvar.name);
+        var result = state.extVars.find((x) => x.name === extVar.name);
 
         if (result) {
-          var index = extvarsState.indexOf(result);
+          var index = state.extVars.indexOf(result);
           if (index > -1) {
-            extvarsState[index].open = !extvarsState[index].open;
-            vscode.setState({extvars: extvarsState});
-            vscode.postMessage({type: "stateUpdated", value: extvarsState});
+            state.extVars[index].open = !state.extVars[index].open;
+            vscode.setState(state);
+            vscode.postMessage({type: "stateUpdated", value: state});
           }
         }
       });
       li.appendChild(i1);
 
       const i2 = document.createElement("i");
-      switch (extvar.type) {
+      switch (extVar.type) {
         case "string":
           i2.className = "codicon codicon-symbol-string";
           break;
@@ -203,25 +255,25 @@
 
       const span = document.createElement("span");
       span.style.verticalAlign = "top";
-      span.textContent = extvar.name;
+      span.textContent = extVar.name;
       li.appendChild(span);
 
       const i3 = document.createElement("i");
-      if (extvar.open) {
+      if (extVar.open) {
         i3.className = "trash codicon codicon-trash";
       } else {
         i3.className = "trash trash-hidden codicon codicon-trash";
       }
 
       i3.addEventListener("click", function () {
-        var result = extvarsState.find((x) => x.name === extvar.name);
+        var result = state.extVars.find((x) => x.name === extVar.name);
 
         if (result) {
-          var index = extvarsState.indexOf(result);
+          var index = state.extVars.indexOf(result);
           if (index > -1) {
-            extvarsState.splice(index, 1);
-            vscode.setState({extvars: extvarsState});
-            vscode.postMessage({type: "stateUpdated", value: extvarsState});
+            state.extVars.splice(index, 1);
+            vscode.setState(state);
+            vscode.postMessage({type: "stateUpdated", value: state});
           }
         }
 
@@ -234,23 +286,24 @@
       const nestedUl = document.createElement("ul");
       nestedUl.className = "nested";
 
-      if (extvar.open) {
+      if (extVar.open) {
         nestedUl.classList.add("active");
       }
 
       const nestedLi = document.createElement("li");
       const textarea = document.createElement("textarea");
-      textarea.textContent = extvar.value;
+      textarea.textContent = extVar.value;
       textarea.addEventListener("change", function (e) {
-        var result = extvarsState.find((x) => x.name === extvar.name);
+        console.log("change", state.extVars);
+        var result = state.extVars.find((x) => x.name === extVar.name);
 
         if (result) {
-          var index = extvarsState.indexOf(result);
+          var index = state.extVars.indexOf(result);
           if (index > -1) {
             // @ts-ignore
-            extvarsState[index].value = e.target.value;
-            vscode.setState({extvars: extvarsState});
-            vscode.postMessage({type: "stateUpdated", value: extvarsState});
+            state.extVars[index].value = e.target.value;
+            vscode.setState(state);
+            vscode.postMessage({type: "stateUpdated", value: state});
           }
         }
       });
@@ -262,9 +315,8 @@
       ul.appendChild(li);
     }
 
-    // Update the saved state
-    vscode.setState({extvars: extvars});
-    vscode.postMessage({type: "stateUpdated", value: extvars});
+    // Update the state
+    state.extVars = extVars;
   }
 
   function addExtvar() {
@@ -274,6 +326,13 @@
 
     // @ts-ignore
     document.getElementById("addextvar-name").value = "";
+    document.getElementById("addextvar-name")?.focus();
+
+    // @ts-ignore
+    document.getElementById("addextvar-add").style.backgroundColor = "#666666";
+    // @ts-ignore
+    document.getElementById("addextvar-add").disabled = true;
+
     // @ts-ignore
     document.getElementById("addextvar-value").value = "";
     var radioButtons = document.getElementsByClassName("addextvar-radio");
@@ -285,7 +344,7 @@
     // @ts-ignore
     radioButtons[0].checked = true;
 
-    const ev = document.getElementById("addExtvar");
+    const ev = document.getElementById("addextvar-panel");
     if (ev) {
       ev.style.display = ev.style.display === "block" ? "none" : "block";
     }
@@ -305,11 +364,9 @@
         ?.classList.remove("trash-hidden");
     }
 
-    for (const extvar of extvarsState) {
+    for (const extvar of state.extVars) {
       extvar.open = true;
     }
-    vscode.setState({extvars: extvarsState});
-    vscode.postMessage({type: "stateUpdated", value: extvarsState});
   }
 
   function collapseAll() {
@@ -326,11 +383,9 @@
         ?.classList.add("trash-hidden");
     }
 
-    for (const extvar of extvarsState) {
+    for (const extvar of state.extVars) {
       extvar.open = false;
     }
-    vscode.setState({extvars: extvarsState});
-    vscode.postMessage({type: "stateUpdated", value: extvarsState});
   }
 
   function handleRadioChange(e) {
@@ -345,9 +400,11 @@
   }
 
   function newExtVar() {
-    const nameEl = document.getElementById("addextvar-name");
-
-    extvarsState.push({name: extVarName, type: extVarType, value: extVarValue});
-    updateExtVars(extvarsState);
+    state.extVars.push({
+      name: extVarName,
+      type: extVarType,
+      value: extVarValue,
+    });
+    updateExtVars(state.extVars);
   }
 })();

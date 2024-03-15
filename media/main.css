@@ -11,7 +11,6 @@ ul, #extvarUL {
 #extvarUL {
   margin: 0;
   margin-left: -0px;
-
   padding: 0;
 }
 
@@ -26,10 +25,10 @@ i, li, ul, #extvarUL {
 }
 
 textarea {
-min-height: 80px;
-min-width: 100%; 
-max-width: 100%;
-font-size: 12px;
+	min-height: 80px;
+	min-width: 100%; 
+	max-width: 100%;
+	font-size: 12px;
 }
 
 .chevron-down {
@@ -51,7 +50,7 @@ font-size: 12px;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-    justify-content: center;
+	justify-content: center;
 }
 
 #icons .icon {
@@ -67,12 +66,6 @@ font-size: 12px;
 	font-size: 32px;
 	padding-bottom: 16px;
 }
-
-#addExtvar {
-  display: none;
-  margin-bottom: 5px;
-}
-
 
 .addextvar-radio {
   display: inline !important;
@@ -95,31 +88,38 @@ fieldset {
 
 #addextvar-name {
 	margin: 2px 0px;
-	 resize: none;
-	  min-height: 32px;
-		 min-width: 100%; 
+	resize: none;
+	min-height: 32px;
+	min-width: 100%; 
 	max-width: 100%;
 }
 
 #addextvar-panel {
+	display: none;
+  margin-bottom: 5px;
 	width: 100%;
-	 border-style: solid; 
-	 border-color: #000;
-	  border-width: 1px;
-		 padding:3px;
+	border-style: solid; 
+	border-color: #000;
+	border-width: 1px;
+	padding:3px;
 }
 
 #addextvar-value {
 	margin: 2px 0;
-	 max-height: 600px; 
-	 min-width: 100%; 
-	 max-width: 100%;
+	max-height: 600px; 
+	min-width: 100%; 
+	max-width: 100%;
 }
 
 #addextvar-cancel, #addextvar-add {
 	width:60px; 
 	margin:5px;
 }
+
+#addextvar-add {
+	background-color: #666666;
+}
+
 
 .addextvar-title {
 	font-weight: bold;

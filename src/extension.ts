@@ -70,6 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register the Sidebar Panels
 
   const variablesViewProvider = new VariablesViewProvider(context.extensionUri);
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       "variablesWebView",
@@ -284,23 +285,17 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.collapseAll", () => {
-  //     extvarProvider.collapseAll();
-  //   }),
-  // );
+  vscode.commands.registerCommand("datatransformer.collapseAll", () => {
+    variablesViewProvider.collapseAll();
+  });
 
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.addExtVar", () => {
-  //     extvarProvider.addExtVar();
-  //   }),
-  // );
+  vscode.commands.registerCommand("datatransformer.addExtVar", () => {
+    variablesViewProvider.addExtVar();
+  });
 
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.expandAll", () => {
-  //     extvarProvider.expandAll();
-  //   }),
-  // );
+  vscode.commands.registerCommand("datatransformer.expandAll", () => {
+    variablesViewProvider.expandAll();
+  });
 
   // context.subscriptions.push(
   //   vscode.commands.registerCommand("datatransformer.reset", () => {
