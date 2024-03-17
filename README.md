@@ -6,7 +6,7 @@ The Data Transformer Script task in Google Cloud Application Integration provide
 
 This extension is intended to assist in the development and testing of those Jsonnet scripts. It allows you to create playgrounds, develop scripts, define external variables and test them against the Data Transformer Playground Jsonnet engine.
 
-![Demo](https://raw.githubusercontent.com/andythehood/playground-vscodeext/main/media/playground1.gif)
+![Demo](https://github.com/andythehood/playground-vscodeext/blob/main/media/playground1.gif?raw=true)
 
 ## Features
 
