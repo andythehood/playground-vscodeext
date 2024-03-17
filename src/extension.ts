@@ -23,7 +23,7 @@ import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
 import {posix} from "path";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "appint" is now active!',
     context.storageUri,
@@ -38,15 +38,47 @@ export function activate(context: vscode.ExtensionContext) {
     workbenchConfig?.get("serverUrl") ||
     "https://datatransformer-playground.web.app";
 
-  const playgroundFolder: string =
+  const playgroundStorageLocation: string =
     workbenchConfig?.get("playgroundStorageLocation") || "";
 
-  const playgroundsRootUri = context.storageUri.with({
-    path: posix.join(
-      playgroundFolder || context.storageUri.path,
-      "playgrounds",
-    ),
-  });
+  let playgroundsRootUri: vscode.Uri = null;
+
+  if (playgroundStorageLocation) {
+    try {
+      const playgroundsStorageLocationUri = vscode.Uri.file(
+        playgroundStorageLocation,
+      );
+
+      playgroundsRootUri = playgroundsStorageLocationUri.with({
+        path: posix.join(playgroundsStorageLocationUri.path, "playgrounds"),
+      });
+    } catch (e) {
+      vscode.window.showErrorMessage(
+        `Unable to create playgrounds directory: ${playgroundStorageLocation}`,
+      );
+      return;
+    }
+  } else if (context.storageUri) {
+    await vscode.workspace.fs.createDirectory(context.storageUri);
+    playgroundsRootUri = context.storageUri.with({
+      path: posix.join(context.storageUri.path, "playgrounds"),
+    });
+  } else {
+    vscode.window.showInformationMessage(
+      "No Workspace or Folder open. Please open a Workspace or Folder to use Data Transformer Playgrounds.",
+    );
+  }
+
+  if (playgroundsRootUri) {
+    try {
+      await vscode.workspace.fs.createDirectory(playgroundsRootUri);
+    } catch (e) {
+      vscode.window.showErrorMessage(
+        `Unable to create playgrounds folder: ${playgroundsRootUri.path}`,
+      );
+      playgroundsRootUri = null;
+    }
+  }
 
   const diagnosticCollection =
     vscode.languages.createDiagnosticCollection("datatransformer");

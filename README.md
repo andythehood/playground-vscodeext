@@ -6,6 +6,8 @@ The Data Transformer Script task in Google Cloud Application Integration provide
 
 This extension is intended to assist in the development and testing of those Jsonnet scripts. It allows you to create playgrounds, develop scripts, define external variables and test them against the Data Transformer Playground Jsonnet engine.
 
+![Demo](https://raw.githubusercontent.com/andythehood/playground-vscodeext/main/media/playground1.gif)
+
 ## Features
 
 - **Jsonnet Language Support** provides basic Jsonnet language support including colorization, syntax highlighting and semantic tokens for the Standard and additional Functions libraries.
@@ -19,7 +21,7 @@ This extension is intended to assist in the development and testing of those Jso
 
 The Data Transformer Playground requires internet access to the Data Transformer Playground server at https://datatransformer-playground.web.app.
 
-Playgrounds, scripts and variables defintions are stored in a local, workspace specific, storage location where the extension has read/write access. By default, this is the location defined by the Workspace's ExtensionContext.storageUri setting. Please see the Visual Studio Code documentation for [Data Storage](https://code.visualstudio.com/api/extension-capabilities/common-capabilities#data-storage) for more information.
+Playgrounds, scripts and variables definitions are stored in a local, workspace specific, storage location where the extension has read/write access. By default, this is the location defined by the Workspace's ExtensionContext.storageUri setting. Please see the Visual Studio Code documentation for [Data Storage](https://code.visualstudio.com/api/extension-capabilities/common-capabilities#data-storage) for more information.
 
 The default playground location can be overridden using the `datatransformer.playground.playgroundStorageLocation` extension setting.
 

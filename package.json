@@ -1,10 +1,10 @@
 {
   "name": "datatransformer-playground",
   "displayName": "Data Transformer Playground",
-  "publisher": "andythehood@gmail.com",
+  "publisher": "andythehood",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
@@ -75,7 +75,8 @@
         {
           "id": "variablesWebView",
           "type": "webview",
-          "name": "Variables"
+          "name": "Variables",
+          "visibility": "visible"
         },
         {
           "id": "helpTreeView",
@@ -88,13 +89,13 @@
     "viewsWelcome": [
       {
         "view": "playgroundsTreeView",
-        "when": "workspaceFolderCount > 0",
+        "when": "workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != ''",
         "contents": "No Playgrounds found [learn more](https://datatransformer-playground.web.app/).\n[New Playground](command:datatransformer.addPlayground)"
       },
       {
         "view": "playgroundsTreeView",
-        "when": "workspaceFolderCount == 0",
-        "contents": "No Workspace or Folder open. Please open a Workspace or Folder to use Data Transformer Playgrounds."
+        "when": "workspaceFolderCount == 0 && config.datatransformer.playground.playgroundStorageLocation == ''",
+        "contents": "No Workspace or Folder open. \nPlease open a Workspace or Folder or set the Playground Storage Location in settings."
       },
       {
         "view": "scriptsTreeView",
@@ -202,12 +203,12 @@
       "view/title": [
         {
           "command": "datatransformer.addPlayground",
-          "when": "view == playgroundsTreeView && workspaceFolderCount > 0",
+          "when": "view == playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
           "group": "navigation@1"
         },
         {
           "command": "datatransformer.importPlayground",
-          "when": "view == playgroundsTreeView && workspaceFolderCount > 0",
+          "when": "view == playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
           "group": "navigation@2"
         },
         {
@@ -221,14 +222,14 @@
           "group": "navigation@1"
         },
         {
-          "command": "datatransformer.collapseAll",
-          "when": "view == variablesWebView && datatransformer.playgroundSelected",
-          "group": "navigation@3"
-        },
-        {
           "command": "datatransformer.expandAll",
           "when": "view == variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@2"
+        },
+        {
+          "command": "datatransformer.collapseAll",
+          "when": "view == variablesWebView && datatransformer.playgroundSelected",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
