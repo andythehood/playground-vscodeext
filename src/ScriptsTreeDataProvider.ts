@@ -15,33 +15,68 @@
 */
 
 import * as vscode from "vscode";
-import {posix} from "path";
+import {basename, extname, posix} from "path";
 
-export class ScriptsTreeItem extends vscode.TreeItem {
-  iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("json");
+type IconPath = {
+  light: string | vscode.Uri;
+  dark: string | vscode.Uri;
+};
+
+export class TestCaseTreeItem extends vscode.TreeItem {
+  iconPath: vscode.ThemeIcon | IconPath = new vscode.ThemeIcon(
+    "json",
+    // new vscode.ThemeColor("charts.yellow"),
+    new vscode.ThemeColor("terminal.ansiBrightYellow"),
+  );
   uri: vscode.Uri;
   label: string;
+  children: TestCaseTreeItem[] | undefined;
 
-  constructor(label: string = "default", uri?: vscode.Uri) {
+  constructor(label: string = "expected output", uri: vscode.Uri) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.uri = uri;
     this.label = label;
+  }
+  contextValue = "TestCaseTreeItem";
+}
+
+export class ScriptsTreeItem extends vscode.TreeItem {
+  // iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("json");
+  iconPath: vscode.ThemeIcon | IconPath = {
+    light: posix.join(__filename, "..", "..", "media", "jsonnet_light.svg"),
+    dark: posix.join(__filename, "..", "..", "media", "jsonnet_dark.svg"),
+  };
+
+  uri: vscode.Uri;
+  label: string;
+  children: TestCaseTreeItem[];
+
+  constructor(
+    label: string = "default",
+    collapsibleState: vscode.TreeItemCollapsibleState,
+    uri?: vscode.Uri,
+    children?: TestCaseTreeItem[],
+  ) {
+    super(label, collapsibleState);
+    this.label = label;
+    this.uri = uri;
+    this.children = children || [];
   }
   contextValue =
     this.label === "default" ? "ScriptsTreeItem_default" : "ScriptsTreeItem";
 }
 
 export class ScriptsTreeDataProvider
-  implements vscode.TreeDataProvider<ScriptsTreeItem>
+  implements vscode.TreeDataProvider<ScriptsTreeItem | TestCaseTreeItem>
 {
-  private data: ScriptsTreeItem[];
+  private treeData: ScriptsTreeItem[];
   private textEncoder = new TextEncoder();
   private scriptsDirUri: vscode.Uri | null = null;
 
   constructor() {
     console.log("constructor");
 
-    this.data = [];
+    this.treeData = [];
   }
 
   private _onDidChangeTreeData: vscode.EventEmitter<
@@ -55,67 +90,129 @@ export class ScriptsTreeDataProvider
     this._onDidChangeTreeData.fire();
   }
 
-  getParent(element: ScriptsTreeItem): vscode.ProviderResult<ScriptsTreeItem> {
-    return null;
+  getParent(
+    node: ScriptsTreeItem | TestCaseTreeItem,
+  ): vscode.ProviderResult<ScriptsTreeItem> {
+    console.log("getParent");
+    if (node instanceof ScriptsTreeItem) {
+      return null;
+    } else {
+      return (
+        this.treeData.find(
+          (item) => item.label === basename(node.uri.path, ".test"),
+        ) || null
+      );
+    }
   }
 
-  getActiveOrDefault(uri: vscode.Uri): ScriptsTreeItem {
-    console.log("getDefault", uri, this.data);
+  getActiveOrDefault(uri: vscode.Uri): ScriptsTreeItem | TestCaseTreeItem {
+    console.log("getActiveOrDefault", uri, this.treeData);
 
     if (!uri) {
-      return this.data[0];
+      return this.treeData[0];
     }
-    return (
-      this.data.find(
-        (item) => item.uri.path.toLowerCase() === uri.path.toLowerCase(),
-      ) || this.data[0]
-    );
+
+    if (extname(uri.path) === ".test") {
+      const scriptUriPath = uri.path.substring(0, uri.path.length - 5);
+      return (
+        this.treeData.find(
+          (item) => item.uri.path.toLowerCase() === scriptUriPath.toLowerCase(),
+        ).children[0] || this.treeData[0]
+      );
+    } else {
+      return (
+        this.treeData.find(
+          (item) => item.uri.path.toLowerCase() === uri.path.toLowerCase(),
+        ) || this.treeData[0]
+      );
+    }
   }
 
   getTreeItem(
-    element: ScriptsTreeItem,
-  ): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    console.log("getTreeItem", element);
+    node: ScriptsTreeItem | TestCaseTreeItem,
+  ): ScriptsTreeItem | TestCaseTreeItem {
+    // ): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
-    return element;
+    node.tooltip = "";
+
+    if (node instanceof TestCaseTreeItem || node?.children?.length === 0) {
+      node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+    } else {
+      node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    }
+
+    return node;
   }
 
   async getChildren(
-    element?: ScriptsTreeItem | undefined,
-  ): Promise<ScriptsTreeItem[]> {
-    console.log("ScriptsTreeItem:getChildren", element);
-    if (element === undefined) {
-      return this.data;
+    node?: ScriptsTreeItem | undefined,
+  ): Promise<ScriptsTreeItem[] | TestCaseTreeItem[]> {
+    console.log("ScriptsTreeItem:getChildren", node);
+    if (node === undefined) {
+      return this.treeData;
     }
-    return null;
+    return node.children;
   }
 
   public async set(playgroundUri: vscode.Uri) {
     // This is to reset the SelectedItem so that the onChange trigger fires again
-    this.data = [];
+    this.treeData = [];
     this.refresh();
 
-    let scriptDirEntries = [];
+    // let scriptsDirEntries: [string, vscode.FileType][] = [];
     if (playgroundUri) {
       const scriptsDirUri = playgroundUri.with({
         path: posix.join(playgroundUri.path, "scripts"),
       });
       this.scriptsDirUri = scriptsDirUri;
 
-      scriptDirEntries = await vscode.workspace.fs.readDirectory(scriptsDirUri);
+      const scriptsDirEntries = (
+        await vscode.workspace.fs.readDirectory(scriptsDirUri)
+      ).filter(
+        ([name, type]) =>
+          name !== ".DS_Store" &&
+          type === vscode.FileType.File &&
+          extname(name) !== ".test",
+      );
 
-      setTimeout(() => {
-        this.data = scriptDirEntries.map((script) => {
+      setTimeout(async () => {
+        const treeData: ScriptsTreeItem[] = [];
+
+        for (const [name, _] of scriptsDirEntries) {
           const scriptUri = scriptsDirUri.with({
-            path: posix.join(scriptsDirUri.path, script[0]),
+            path: posix.join(scriptsDirUri.path, name),
           });
 
-          return new ScriptsTreeItem(script[0], scriptUri);
-        });
+          const children: TestCaseTreeItem[] = [];
 
-        this.data = this.data
+          const testCaseUri = scriptUri.with({
+            path: scriptUri.path + ".test",
+          });
+
+          try {
+            await vscode.workspace.fs.stat(testCaseUri);
+            const testCaseTreeItem = new TestCaseTreeItem(
+              "expected output",
+              testCaseUri,
+            );
+            children.push(testCaseTreeItem);
+          } catch {}
+
+          treeData.push(
+            new ScriptsTreeItem(
+              name,
+              vscode.TreeItemCollapsibleState.Collapsed,
+              scriptUri,
+              children,
+            ),
+          );
+        }
+
+        // Arrange the treeData order, so that 'default' is always first
+        this.treeData = treeData
           .filter((item) => item.label === "default")
-          .concat(this.data.filter((item) => item.label !== "default"));
+          .concat(treeData.filter((item) => item.label !== "default"));
+
         this.refresh();
       }, 100);
     }
@@ -142,12 +239,23 @@ export class ScriptsTreeDataProvider
         if (answer === "Yes") {
           // Run function
 
-          await vscode.workspace.fs.delete(node.uri);
+          const testCaseUri = node.uri.with({
+            path: node.uri.path + ".test",
+          });
 
+          await vscode.workspace.fs.delete(node.uri);
           this.closeFileIfOpen(node.uri);
 
-          this.data = this.data.filter((script) => script.label !== node.label);
-          vscode.window.showInformationMessage("Deleting Script");
+          try {
+            await vscode.workspace.fs.delete(testCaseUri);
+          } catch {}
+
+          this.closeFileIfOpen(testCaseUri);
+
+          this.treeData = this.treeData.filter(
+            (script) => script.label !== node.label,
+          );
+          vscode.window.showInformationMessage("Deleted Script");
 
           this.refresh();
         }
@@ -157,7 +265,7 @@ export class ScriptsTreeDataProvider
   public async addScript(): Promise<ScriptsTreeItem> {
     const scriptName = await vscode.window.showInputBox({
       placeHolder: "script-name",
-      prompt: "Enter a name for the new Script",
+      title: "Script Name",
     });
 
     if (!scriptName) {
@@ -171,7 +279,7 @@ export class ScriptsTreeDataProvider
       return null;
     }
 
-    if (this.data.find((v) => v.label === scriptName)) {
+    if (this.treeData.find((node) => node.label === scriptName)) {
       vscode.window.showErrorMessage(
         "Invalid Script Name - script with same name already exists",
       );
@@ -179,7 +287,7 @@ export class ScriptsTreeDataProvider
     }
 
     const snippet =
-      '\n// Import the additional functions library\nlocal f = import "functions";\n\n{\n  id: f.getExecutionId(),\n}';
+      "\n// Import the additional functions library\nlocal f = import 'functions';\n\n{\n  id: f.getExecutionId(),\n}";
 
     const scriptUri = this.scriptsDirUri.with({
       path: posix.join(this.scriptsDirUri.path, scriptName),
@@ -190,20 +298,115 @@ export class ScriptsTreeDataProvider
       this.textEncoder.encode(snippet),
     );
 
-    const scriptsTreeItem = new ScriptsTreeItem(scriptName, scriptUri);
+    const scriptsTreeItem = new ScriptsTreeItem(
+      scriptName,
+      vscode.TreeItemCollapsibleState.Collapsed,
+      scriptUri,
+    );
 
-    this.data.push(scriptsTreeItem);
+    this.treeData.push(scriptsTreeItem);
 
     this.refresh();
     return scriptsTreeItem;
   }
 
-  public async onSelect(node: ScriptsTreeItem): Promise<void> {
+  public async onSelect(
+    node: ScriptsTreeItem | TestCaseTreeItem,
+  ): Promise<void> {
     if (node) {
       const doc = await vscode.workspace.openTextDocument(node.uri);
 
-      vscode.window.showTextDocument(doc, {preview: false});
-      vscode.languages.setTextDocumentLanguage(doc, "datatransformer");
+      vscode.window.showTextDocument(doc, {
+        preview: false,
+        viewColumn: vscode.ViewColumn.One,
+      });
+      if (node instanceof ScriptsTreeItem) {
+        vscode.languages.setTextDocumentLanguage(doc, "datatransformer");
+      } else {
+        vscode.languages.setTextDocumentLanguage(doc, "json");
+      }
+    }
+  }
+
+  public async addTestCase(node: ScriptsTreeItem): Promise<TestCaseTreeItem> {
+    if (node.children.length === 0) {
+      const testCaseUri = node.uri.with({
+        path: node.uri.path + ".test",
+      });
+
+      console.log("addTestCase", testCaseUri);
+      try {
+        await vscode.workspace.fs.stat(testCaseUri);
+      } catch {
+        const testCase = JSON.stringify({}, null, 2);
+
+        await vscode.workspace.fs.writeFile(
+          testCaseUri,
+          this.textEncoder.encode(testCase),
+        );
+      }
+
+      const testCaseTreeItem = new TestCaseTreeItem(
+        "expected output",
+        testCaseUri,
+      );
+
+      const index = this.treeData.findIndex((n) => n.label === node.label);
+
+      console.log("treeData.findIndex", index);
+      this.treeData[index].collapsibleState =
+        vscode.TreeItemCollapsibleState.Expanded;
+      this.treeData[index].children.push(testCaseTreeItem);
+
+      this.refresh();
+      return this.treeData[index].children[0];
+    } else {
+      this.refresh();
+      return node.children[0];
+    }
+  }
+
+  public async deleteTestCase(node: TestCaseTreeItem) {
+    const scriptUriPath = node.uri.path.substring(0, node.uri.path.length - 5);
+
+    const scriptNode = this.treeData.find(
+      (item) => item.uri.path.toLowerCase() === scriptUriPath.toLowerCase(),
+    );
+
+    vscode.window
+      .showInformationMessage(
+        `Delete Test Script for ${scriptNode.label}?`,
+        "Yes",
+        "No",
+      )
+      .then(async (answer) => {
+        if (answer === "Yes") {
+          // Run function
+
+          await vscode.workspace.fs.delete(node.uri);
+
+          if (scriptNode) {
+            scriptNode.children = [];
+          }
+
+          this.closeFileIfOpen(node.uri);
+
+          vscode.window.showInformationMessage("Deleted Test Case");
+
+          this.refresh();
+        }
+      });
+  }
+
+  getTestCaseNode(label: string): TestCaseTreeItem {
+    const parent = this.treeData.find((node) => node.label === label);
+    console.log("getTestCaseNode", parent);
+
+    if (parent.children.length === 0) {
+      console.log("wtf");
+      return null;
+    } else {
+      return parent.children[0];
     }
   }
 }

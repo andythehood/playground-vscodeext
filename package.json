@@ -4,13 +4,13 @@
   "publisher": "andythehood",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
   },
   "engines": {
-    "vscode": "^1.86.0"
+    "vscode": "^1.87.0"
   },
   "categories": [
     "Programming Languages",
@@ -43,8 +43,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./media/icon.png",
-          "dark": "./media/icon.png"
+          "light": "./media/jsonnet_light.svg",
+          "dark": "./media/jsonnet_dark.svg"
         }
       }
     ],
@@ -53,7 +53,7 @@
         {
           "id": "playground-sidebar-view",
           "title": "Data Transformer Playground",
-          "icon": "media/icon.svg"
+          "icon": "media/jsonnetmapper_24px_grey.svg"
         }
       ]
     },
@@ -145,8 +145,28 @@
         "icon": "$(device-camera)"
       },
       {
+        "command": "datatransformer.addTestCase",
+        "title": "Add Test Case",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "datatransformer.deleteTestCase",
+        "title": "Delete Test Case",
+        "icon": "$(trash)"
+      },
+      {
         "command": "datatransformer.deletePlayground",
         "title": "Delete Playground",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "datatransformer.renameSnapshot",
+        "title": "Rename Snapshot",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "datatransformer.deleteSnapshot",
+        "title": "Delete Snapshot",
         "icon": "$(trash)"
       },
       {
@@ -160,28 +180,16 @@
         "icon": "$(trash)"
       },
       {
-        "command": "datatransformer.insertSnippet",
-        "title": "Data Transformer Playground: Import Functions Snippet"
-      },
-      {
-        "command": "datatransformer.newTemplate",
-        "title": "Data Transformer Playground: New Template"
-      },
-      {
-        "command": "datatransformer.exampleTemplate",
-        "title": "Data Transformer Playground: Example Template"
-      },
-      {
         "command": "datatransformer.selectAndRunScript",
         "title": "Run Script",
         "when": "editorLangId == datatransformer || view == scriptsTreeView",
-        "icon": "$(play-circle)"
+        "icon": "$(play)"
       },
       {
         "command": "datatransformer.runScript",
         "title": "Run Script",
         "enablement": "editorLangId == datatransformer",
-        "icon": "$(play-circle)"
+        "icon": "$(play)"
       }
     ],
     "keybindings": [
@@ -235,18 +243,28 @@
       "view/item/context": [
         {
           "command": "datatransformer.deletePlayground",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@1"
         },
         {
           "command": "datatransformer.exportPlayground",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@2"
         },
         {
           "command": "datatransformer.takeSnapshot",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeitem",
+          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@3"
+        },
+        {
+          "command": "datatransformer.deleteSnapshot",
+          "when": "view == playgroundsTreeView && viewItem == SnapshotTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "datatransformer.renameSnapshot",
+          "when": "view == playgroundsTreeView && viewItem == SnapshotTreeItem",
+          "group": "inline@2"
         },
         {
           "command": "datatransformer.deleteScript",
@@ -255,20 +273,30 @@
         },
         {
           "command": "datatransformer.selectAndRunScript",
-          "when": "view == scriptsTreeView",
+          "when": "view == scriptsTreeView && viewItem != TestCaseTreeItem",
           "group": "inline@2"
+        },
+        {
+          "command": "datatransformer.addTestCase",
+          "when": "view == scriptsTreeView && viewItem != TestCaseTreeItem",
+          "group": "inline@3"
+        },
+        {
+          "command": "datatransformer.deleteTestCase",
+          "when": "view == scriptsTreeView && viewItem == TestCaseTreeItem",
+          "group": "inline@1"
         }
       ]
     },
     "configuration": {
       "title": "Data Transformer Playground",
       "properties": {
-        "datatransformer.playground.serverUrl": {
+        "datatransformer.serverUrl": {
           "type": "string",
           "description": "URL of the Data Transformer Server",
           "default": "https://datatransformer-playground.web.app"
         },
-        "datatransformer.playground.playgroundStorageLocation": {
+        "datatransformer.playgroundStorageLocation": {
           "type": "string",
           "description": "Local folder for storing playgrounds.\n\nIf not specified, defaults to a Workspace specific storage location (ExtensionContext.storageUri).\n\n* Reopen the workspace after changing this value *",
           "default": ""
@@ -287,14 +315,14 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
-    "@types/vscode": "^1.86.0",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.87.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
     "@vscode/codicons": "^0.0.35",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.3"
+    "@vscode/test-cli": "^0.0.8",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.2"
   }
 }

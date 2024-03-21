@@ -15,83 +15,107 @@
 */
 
 import * as vscode from "vscode";
-import {basename, posix} from "path";
+import {basename, extname, posix} from "path";
 import {VariablesViewProvider} from "./VariablesViewProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
+import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
 
-enum TreeItemType {
-  Playground = 1,
-  Snapshot,
+type IconPath = {
+  light: string | vscode.Uri;
+  dark: string | vscode.Uri;
+};
+export class SnapshotTreeItem extends vscode.TreeItem {
+  iconPath: vscode.ThemeIcon | IconPath;
+  uri: vscode.Uri;
+  parent?: string;
+  children: SnapshotTreeItem[] | undefined;
+  id: string;
+
+  constructor(label: string, id: string, uri: vscode.Uri, parent: string) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+
+    this.iconPath = new vscode.ThemeIcon(
+      "history",
+      new vscode.ThemeColor("terminal.ansiGreen"),
+    );
+    this.uri = uri;
+    this.parent = parent;
+    this.id = id;
+  }
+
+  contextValue = "SnapshotTreeItem";
 }
+
 export class PlaygroundTreeItem extends vscode.TreeItem {
-  type: TreeItemType;
-  iconPath: vscode.ThemeIcon;
-  children: PlaygroundTreeItem[] | undefined;
+  // type: TreeItemType;
+  iconPath: vscode.ThemeIcon | IconPath = {
+    light: posix.join(
+      __filename,
+      "..",
+      "..",
+      "media",
+      "jsonnetmapper_24px_bluey.svg",
+    ),
+    dark: posix.join(
+      __filename,
+      "..",
+      "..",
+      "media",
+      "jsonnetmapper_24px_bluey.svg",
+    ),
+  };
+  children: SnapshotTreeItem[] | undefined;
   uri: vscode.Uri;
   parent?: string;
 
   constructor(
     label: string,
-    // collapsibleState: vscode.TreeItemCollapsibleState = vscode
-    //   .TreeItemCollapsibleState.None,
     collapsibleState: vscode.TreeItemCollapsibleState,
-    type: TreeItemType,
     uri: vscode.Uri,
     parent: string,
-    children?: PlaygroundTreeItem[],
+    children?: SnapshotTreeItem[],
   ) {
     super(label, collapsibleState);
 
     this.children = children;
-    this.iconPath =
-      type === TreeItemType.Playground
-        ? new vscode.ThemeIcon("server-process")
-        : new vscode.ThemeIcon("history");
-    this.type = type;
+
     this.uri = uri;
     this.parent = parent;
   }
 
-  contextValue =
-    this.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed
-      ? "PlaygroundTreeitem"
-      : "PlaygroundTreeitem_Snapshot";
-
-  // public async onClick(): Promise<void> {
-  //   // if (this.url) {
-  //   //   await vscode.env.openExternal(vscode.Uri.parse(this.url));
-  //   // }
-  // }
+  contextValue = "PlaygroundTreeItem";
 }
 
 export class PlaygroundsTreeDataProvider
-  implements vscode.TreeDataProvider<PlaygroundTreeItem>
+  implements vscode.TreeDataProvider<PlaygroundTreeItem | SnapshotTreeItem>
 {
-  private panel: vscode.WebviewPanel | null = null;
   private textEncoder = new TextEncoder();
-  private data: PlaygroundTreeItem[];
+  private treeData: PlaygroundTreeItem[];
 
   constructor(
     private readonly playgroundsRootUri: vscode.Uri,
     private readonly diagnosticCollection: vscode.DiagnosticCollection,
     private readonly variablesProvider: VariablesViewProvider,
     private readonly scriptsProvider: ScriptsTreeDataProvider,
+    private readonly readOnlyContentProvider: ReadOnlyContentProvider,
+
     private readonly serverUrl: string,
     private readonly outputChannel: vscode.OutputChannel,
   ) {
     console.log("constructor", playgroundsRootUri);
 
-    this.data = [];
+    this.treeData = [];
   }
 
   getParent(
-    element: PlaygroundTreeItem,
+    node: PlaygroundTreeItem | SnapshotTreeItem,
   ): vscode.ProviderResult<PlaygroundTreeItem> {
-    console.log("getParent", element);
-    if (element.type === TreeItemType.Playground) {
+    if (node instanceof PlaygroundTreeItem) {
       return null;
     } else {
-      return this.data.find((item) => item.label.toString() === element.parent);
+      return this.treeData.find(
+        (item) => item.label.toString() === node.parent,
+      );
     }
   }
 
@@ -107,29 +131,45 @@ export class PlaygroundsTreeDataProvider
   }
 
   getTreeItem(
-    element: PlaygroundTreeItem,
-  ): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    console.log("getTreeItem", element);
+    node: PlaygroundTreeItem | SnapshotTreeItem,
+  ): PlaygroundTreeItem | SnapshotTreeItem {
+    // ): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
-    if (!element.children) {
-      element.collapsibleState = vscode.TreeItemCollapsibleState.None;
+    node.tooltip = "";
+    if (!node.children) {
+      node.collapsibleState = vscode.TreeItemCollapsibleState.None;
     }
-    return element;
+
+    if (node instanceof SnapshotTreeItem) {
+      const idLabel =
+        new Date(parseInt(node.id)).toDateString() +
+        " " +
+        new Date(parseInt(node.id)).toLocaleTimeString();
+      if (node.label !== idLabel) {
+        node.tooltip = "Snapshot created at " + idLabel;
+      }
+    }
+
+    return node;
   }
 
-  getPlayground(playground: string, snapshot: string): PlaygroundTreeItem {
-    const playgroundTreeItem = this.data.find(
+  getPlayground(
+    playground: string,
+    snapshot: string,
+  ): PlaygroundTreeItem | SnapshotTreeItem {
+    const playgroundTreeItem = this.treeData.find(
       (item) => item.label === playground,
     );
 
     if (snapshot) {
-      const idLabel =
-        new Date(parseInt(snapshot)).toDateString() +
-        " " +
-        new Date(parseInt(snapshot)).toLocaleTimeString();
+      // const idLabel =
+      //   new Date(parseInt(snapshot)).toDateString() +
+      //   " " +
+      //   new Date(parseInt(snapshot)).toLocaleTimeString();
 
       return playgroundTreeItem.children.find(
-        (item) => item.label.toString() === idLabel,
+        // (item) => item.label.toString() === idLabel,
+        (item) => item.id === snapshot,
       );
     } else {
       return playgroundTreeItem;
@@ -137,24 +177,23 @@ export class PlaygroundsTreeDataProvider
   }
 
   async getChildren(
-    element?: PlaygroundTreeItem | undefined,
-  ): Promise<PlaygroundTreeItem[]> {
-    console.log("getChildren", element);
+    node?: PlaygroundTreeItem | undefined,
+  ): Promise<PlaygroundTreeItem[] | SnapshotTreeItem[]> {
+    console.log("getChildren", node);
 
-    if (element === undefined) {
-      this.data = [];
+    if (node === undefined) {
+      this.treeData = [];
 
       if (this.playgroundsRootUri) {
         try {
-          for (const [name, type] of await vscode.workspace.fs.readDirectory(
-            this.playgroundsRootUri,
-          )) {
-            console.log("readDirectory", name, type);
+          const playgroundDirEntries = (
+            await vscode.workspace.fs.readDirectory(this.playgroundsRootUri)
+          ).filter(
+            ([name, type]) =>
+              name !== ".DS_Store" && type === vscode.FileType.Directory,
+          );
 
-            if (type !== vscode.FileType.Directory) {
-              continue;
-            }
-
+          for (const [name, _] of playgroundDirEntries) {
             const playgroundDirUri = this.playgroundsRootUri.with({
               path: posix.join(this.playgroundsRootUri.path, name),
             });
@@ -163,35 +202,54 @@ export class PlaygroundsTreeDataProvider
               path: posix.join(playgroundDirUri.path, "snapshots"),
             });
 
-            const scriptDirEntries = await vscode.workspace.fs.readDirectory(
-              snapshotsDirUri,
+            const snapshotsDirEntries = (
+              await vscode.workspace.fs.readDirectory(snapshotsDirUri)
+            ).filter(
+              ([name, type]) =>
+                name !== ".DS_Store" && type === vscode.FileType.Directory,
             );
+            const children: SnapshotTreeItem[] = [];
 
-            const children = scriptDirEntries.map((snapshot) => {
+            for (const [snapshotDirName, _] of snapshotsDirEntries) {
               const snapshotDirUri = snapshotsDirUri.with({
-                path: posix.join(snapshotsDirUri.path, snapshot[0]),
+                path: posix.join(snapshotsDirUri.path, snapshotDirName),
               });
-              const idLabel =
-                new Date(parseInt(snapshot[0])).toDateString() +
-                " " +
-                new Date(parseInt(snapshot[0])).toLocaleTimeString();
 
-              return new PlaygroundTreeItem(
-                idLabel,
-                vscode.TreeItemCollapsibleState.None,
-                TreeItemType.Snapshot,
-                snapshotDirUri,
-                name,
-                null,
+              const snapshotMetaUri = snapshotDirUri.with({
+                path: posix.join(snapshotDirUri.path, "meta.json"),
+              });
+
+              let label = "";
+
+              try {
+                const bytes = await vscode.workspace.fs.readFile(
+                  snapshotMetaUri,
+                );
+                const snapshotMeta = JSON.parse(bytes.toString());
+                label = snapshotMeta.label;
+              } catch {
+                label =
+                  new Date(parseInt(snapshotDirName)).toDateString() +
+                  " " +
+                  new Date(parseInt(snapshotDirName)).toLocaleTimeString();
+              }
+              children.push(
+                new SnapshotTreeItem(
+                  label,
+                  snapshotDirName,
+                  snapshotDirUri,
+                  name,
+                ),
               );
-            });
+            }
             children.reverse();
 
-            this.data.push(
+            this.treeData.push(
               new PlaygroundTreeItem(
                 name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                TreeItemType.Playground,
+                children.length
+                  ? vscode.TreeItemCollapsibleState.Collapsed
+                  : vscode.TreeItemCollapsibleState.None,
                 playgroundDirUri,
                 null,
                 children,
@@ -202,9 +260,9 @@ export class PlaygroundsTreeDataProvider
           console.log("Directory doesn't exist yet, so no playgrounds", e);
         }
       }
-      return this.data;
+      return this.treeData;
     }
-    return element.children;
+    return node.children;
   }
 
   async closeFileIfOpen(file: vscode.Uri): Promise<void> {
@@ -222,9 +280,13 @@ export class PlaygroundsTreeDataProvider
   }
 
   async closeScripts(scriptsDirUri: vscode.Uri) {
-    for (const [name, type] of await vscode.workspace.fs.readDirectory(
-      scriptsDirUri,
-    )) {
+    const scriptsDirEntries = (
+      await vscode.workspace.fs.readDirectory(scriptsDirUri)
+    ).filter(
+      ([name, type]) => name !== ".DS_Store" && type === vscode.FileType.File,
+    );
+
+    for (const [name, _] of scriptsDirEntries) {
       const scriptsUri = scriptsDirUri.with({
         path: posix.join(scriptsDirUri.path, name),
       });
@@ -234,9 +296,14 @@ export class PlaygroundsTreeDataProvider
   }
 
   async closeSnapshotScripts(snapshotsDirUri: vscode.Uri) {
-    for (const [name, type] of await vscode.workspace.fs.readDirectory(
-      snapshotsDirUri,
-    )) {
+    const snapshotsDirEntries = (
+      await vscode.workspace.fs.readDirectory(snapshotsDirUri)
+    ).filter(
+      ([name, type]) =>
+        name !== ".DS_Store" && type === vscode.FileType.Directory,
+    );
+
+    for (const [name, _] of snapshotsDirEntries) {
       const scriptsDirUri = snapshotsDirUri.with({
         path: posix.join(snapshotsDirUri.path, name, "scripts"),
       });
@@ -273,6 +340,36 @@ export class PlaygroundsTreeDataProvider
           this.refresh();
         }
       });
+  }
+
+  public async deleteSnapshot(node: SnapshotTreeItem): Promise<string> {
+    const answer = await vscode.window.showInformationMessage(
+      `Delete Snapshot ${node.label}?`,
+      "Yes",
+      "No",
+    );
+
+    if (answer === "Yes") {
+      // Run function
+      try {
+        console.log("deleting", node.uri, node.parent);
+
+        const scriptsDirUri = node.uri.with({
+          path: posix.join(node.uri.path, "scripts"),
+        });
+        await this.closeScripts(scriptsDirUri);
+
+        await vscode.workspace.fs.delete(node.uri, {
+          recursive: true,
+          useTrash: false,
+        });
+      } catch (e) {
+        vscode.window.showErrorMessage("err", e);
+      }
+      this.refresh();
+      return node.parent;
+    }
+    return "";
   }
 
   private createFiles = async (uri: vscode.Uri, json: any) => {
@@ -316,36 +413,96 @@ export class PlaygroundsTreeDataProvider
     }
   };
 
+  public async renameSnapshot(node: SnapshotTreeItem) {
+    console.log("renameSnapshot", node.uri);
+
+    const snapshotName = await vscode.window.showInputBox({
+      placeHolder: "snapshot-name",
+      title: "Snapshot Name (or blank to revert to auto name)\n",
+    });
+
+    if (snapshotName === undefined) {
+      return;
+    }
+
+    const snapshotMetaUri = node.uri.with({
+      path: posix.join(node.uri.path, "meta.json"),
+    });
+
+    let label = "";
+    if (snapshotName !== "") {
+      label = snapshotName;
+    } else {
+      label =
+        new Date(parseInt(node.id)).toDateString() +
+        " " +
+        new Date(parseInt(node.id)).toLocaleTimeString();
+    }
+
+    const snapshotMeta = {label: label};
+    await vscode.workspace.fs.writeFile(
+      snapshotMetaUri,
+      this.textEncoder.encode(JSON.stringify(snapshotMeta, null, 2)),
+    );
+    this.refresh();
+  }
+
   public async takeSnapshot(node: PlaygroundTreeItem) {
     console.log("takeSnapshot", node.uri);
 
+    const snapshotName = await vscode.window.showInputBox({
+      placeHolder: "snapshot-name",
+      title: "Snapshot Name (or blank for auto name)",
+    });
+
+    if (snapshotName === undefined) {
+      return;
+    }
+
+    console.log("snapshotName", snapshotName);
+
     const snapshotId = Date.now().toString();
 
-    const snapshotsDirUri = node.uri.with({
+    const snapshotDirUri = node.uri.with({
       path: posix.join(node.uri.path, "snapshots", snapshotId),
     });
 
     try {
-      await vscode.workspace.fs.createDirectory(snapshotsDirUri);
+      await vscode.workspace.fs.createDirectory(snapshotDirUri);
     } catch (e) {
       vscode.window.showErrorMessage("unable to create directory");
     }
 
     try {
+      const snapshotMetaUri = snapshotDirUri.with({
+        path: posix.join(snapshotDirUri.path, "meta.json"),
+      });
+
+      const label =
+        new Date(parseInt(snapshotId)).toDateString() +
+        " " +
+        new Date(parseInt(snapshotId)).toLocaleTimeString();
+
+      const snapshotMeta = {label: snapshotName || label};
+      await vscode.workspace.fs.writeFile(
+        snapshotMetaUri,
+        this.textEncoder.encode(JSON.stringify(snapshotMeta, null, 2)),
+      );
+
       await vscode.workspace.fs.copy(
         node.uri.with({
           path: posix.join(node.uri.path, "extVars.json"),
         }),
-        snapshotsDirUri.with({
-          path: posix.join(snapshotsDirUri.path, "extVars.json"),
+        snapshotDirUri.with({
+          path: posix.join(snapshotDirUri.path, "extVars.json"),
         }),
       );
       await vscode.workspace.fs.copy(
         node.uri.with({
           path: posix.join(node.uri.path, "scripts"),
         }),
-        snapshotsDirUri.with({
-          path: posix.join(snapshotsDirUri.path, "scripts"),
+        snapshotDirUri.with({
+          path: posix.join(snapshotDirUri.path, "scripts"),
         }),
       );
     } catch (e) {
@@ -385,9 +542,16 @@ export class PlaygroundsTreeDataProvider
 
       const scriptsDirUri = uri.with({path: posix.join(uri.path, "scripts")});
 
-      for (const [name, type] of await vscode.workspace.fs.readDirectory(
-        scriptsDirUri,
-      )) {
+      const scriptsDirEntries = (
+        await vscode.workspace.fs.readDirectory(scriptsDirUri)
+      ).filter(
+        ([name, type]) =>
+          name !== ".DS_Store" &&
+          type === vscode.FileType.File &&
+          extname(name) !== ".test",
+      );
+
+      for (const [name, _] of scriptsDirEntries) {
         if (name !== "default") {
           continue;
         }
@@ -404,9 +568,7 @@ export class PlaygroundsTreeDataProvider
         scripts.push(script);
       }
 
-      for (const [name, type] of await vscode.workspace.fs.readDirectory(
-        scriptsDirUri,
-      )) {
+      for (const [name, _] of scriptsDirEntries) {
         if (name === "default") {
           continue;
         }
@@ -441,14 +603,40 @@ export class PlaygroundsTreeDataProvider
       const snapshotsDirUri = uri.with({
         path: posix.join(uri.path, "snapshots"),
       });
-      for (const [name, type] of await vscode.workspace.fs.readDirectory(
-        snapshotsDirUri,
-      )) {
+
+      const snapshotsDirEntries = (
+        await vscode.workspace.fs.readDirectory(snapshotsDirUri)
+      ).filter(
+        ([name, type]) =>
+          name !== ".DS_Store" && type === vscode.FileType.Directory,
+      );
+
+      for (const [name, _] of snapshotsDirEntries) {
         const snapshotDirUri = snapshotsDirUri.with({
           path: posix.join(snapshotsDirUri.path, name),
         });
+
+        // check for metadata
+        const snapshotMetaUri = snapshotDirUri.with({
+          path: posix.join(snapshotDirUri.path, "meta.json"),
+        });
+
+        let label = "";
+
+        try {
+          const bytes = await vscode.workspace.fs.readFile(snapshotMetaUri);
+          const snapshotMeta = JSON.parse(bytes.toString());
+          label = snapshotMeta.label;
+        } catch {
+          label =
+            new Date(parseInt(name)).toDateString() +
+            " " +
+            new Date(parseInt(name)).toLocaleTimeString();
+        }
+
         const s = {
           id: parseInt(name),
+          label: label,
           scripts: await getScripts(snapshotDirUri),
           extVars: await getExtVars(snapshotDirUri),
         };
@@ -542,7 +730,12 @@ export class PlaygroundsTreeDataProvider
     }
   }
 
-  public async onSelect(node: PlaygroundTreeItem): Promise<void> {
+  public async onSelect(
+    node: PlaygroundTreeItem | SnapshotTreeItem,
+  ): Promise<void> {
+    console.log("onSelect1", node instanceof PlaygroundTreeItem);
+    console.log("onSelect2", node instanceof SnapshotTreeItem);
+
     if (!node) {
       vscode.commands.executeCommand(
         "setContext",
@@ -552,7 +745,7 @@ export class PlaygroundsTreeDataProvider
 
       this.variablesProvider.set(null);
       this.scriptsProvider.set(null);
-    } else if (node.type === TreeItemType.Playground) {
+    } else if (node instanceof PlaygroundTreeItem) {
       vscode.commands.executeCommand(
         "setContext",
         "datatransformer.playgroundSelected",
@@ -561,7 +754,7 @@ export class PlaygroundsTreeDataProvider
 
       this.variablesProvider.set(node.uri);
       await this.scriptsProvider.set(node.uri);
-    } else if (node.type === TreeItemType.Snapshot) {
+    } else if (node instanceof SnapshotTreeItem) {
       vscode.commands.executeCommand(
         "setContext",
         "datatransformer.playgroundSelected",
@@ -578,7 +771,7 @@ export class PlaygroundsTreeDataProvider
 
     const playgroundName = await vscode.window.showInputBox({
       placeHolder: "playground-name",
-      prompt: "Enter a name for the new Playground",
+      title: "Playground Name",
     });
 
     if (!playgroundName) {
@@ -592,7 +785,7 @@ export class PlaygroundsTreeDataProvider
       return "";
     }
 
-    if (this.data.find((v) => v.label === playgroundName)) {
+    if (this.treeData.find((v) => v.label === playgroundName)) {
       vscode.window.showErrorMessage(
         "Invalid Playground Name - playground with same name already exists",
       );
@@ -618,7 +811,7 @@ export class PlaygroundsTreeDataProvider
         {
           name: "default",
           snippet:
-            '\n// Import the additional functions library\nlocal f = import "functions";\n\n{\n  id: f.getExecutionId(),\n}',
+            "\n// Import the additional functions library\nlocal f = import 'functions';\n\n{\n  id: f.getExecutionId(),\n}",
           errorMessage: "",
         },
       ],
@@ -695,9 +888,9 @@ export class PlaygroundsTreeDataProvider
       const bytes = await vscode.workspace.fs.readFile(extVarsUri);
       const extVars = JSON.parse(bytes.toString());
 
-      const title = `Data Transformer Output for '${basename(
+      const title = `Data Transformer Output for ${basename(
         editor.document.fileName,
-      )}'`;
+      )}`;
 
       const body = {
         script: basename(editor.document.fileName),
@@ -761,61 +954,98 @@ export class PlaygroundsTreeDataProvider
             data.trace.replaceAll("TRACE: :", "trace:"),
           );
         }
-        if (!this.panel) {
-          this.panel = vscode.window.createWebviewPanel(
-            "datatransformerOutput",
-            title,
-            {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
-            {},
+
+        const uri = vscode.Uri.parse("readonly:").with({path: title});
+
+        console.log(uri);
+
+        // this.myProvider.setContentAndRefresh(uri, data.message);
+
+        const doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+
+        if (data.status === 200) {
+          this.readOnlyContentProvider.setContentAndRefresh(
+            uri,
+            // JSON.stringify(JSON.parse(data.message), null, "\t") + "\n",
+            JSON.stringify(JSON.parse(data.message), null, 2) + "\n",
           );
-          this.panel.onDidDispose(() => {
-            this.panel = null;
-          });
+          vscode.languages.setTextDocumentLanguage(doc, "json");
         } else {
-          this.panel.title = title;
+          this.readOnlyContentProvider.setContentAndRefresh(uri, data.message);
+          vscode.languages.setTextDocumentLanguage(doc, "plaintext");
         }
 
-        const html = `<html>
-<head>
-</head>
-<body>
-<pre>
-<code style="background-color: transparent;font-size: 12px;">${data.message}</code>
-</pre>
-</body>
-</html>`;
+        const testCaseUri = editor.document.uri.with({
+          path: editor.document.uri.path + ".test",
+        });
 
-        this.panel.webview.html = html;
+        try {
+          await vscode.workspace.fs.stat(testCaseUri);
+
+          vscode.commands.executeCommand(
+            "vscode.diff",
+            testCaseUri,
+            uri,
+
+            `Data Transformer Output for ${basename(editor.document.fileName)}`,
+            {viewColumn: vscode.ViewColumn.Two, preview: true},
+          );
+        } catch {
+          await vscode.window.showTextDocument(
+            doc,
+            vscode.ViewColumn.Two,
+            true,
+          );
+        }
+
+        // this.myProvider.onDidChangeEmitter.fire(uri);
+
+        //         if (!this.panel) {
+        //           this.panel = vscode.window.createWebviewPanel(
+        //             "datatransformerOutput",
+        //             title,
+        //             {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
+        //             {},
+        //           );
+        //           this.panel.onDidDispose(() => {
+        //             this.panel = null;
+        //           });
+        //         } else {
+        //           this.panel.title = title;
+        //         }
+
+        //         const html = `<html>
+        // <head>
+        // </head>
+        // <body>
+        // <pre>
+        // <code style="background-color: transparent;font-size: 12px;">${data.message}</code>
+        // </pre>
+        // </body>
+        // </html>`;
+
+        //         this.panel.webview.html = html;
       } catch (e: any) {
         // vscode.window.showInformationMessage(
         vscode.window.showErrorMessage(
           `Error calling Jsonnet Server: ${e.message} ${e.cause}`,
         );
-        if (!this.panel) {
-          this.panel = vscode.window.createWebviewPanel(
-            "datatransformerOutput",
-            title,
-            {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
-            {},
-          );
-          this.panel.onDidDispose(() => {
-            this.panel = null;
-          });
-        } else {
-          this.panel.title = title;
-        }
 
-        const html = `<html>
-<head>
-</head>
-<body>
-<pre>
-<code style="background-color: transparent;font-size: 12px;">${e.message} ${e.cause}</code>
-</pre>
-</body>
-</html>`;
+        // const uri = vscode.Uri.parse("readonly:" + title);
+        const uri = vscode.Uri.parse("readonly:").with({path: title});
 
-        this.panel.webview.html = html;
+        // this.myProvider.setContentAndRefresh(uri, data.message);
+
+        const doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+
+        this.readOnlyContentProvider.setContentAndRefresh(
+          uri,
+          `${e.message} ${e.cause}`,
+        );
+
+        vscode.languages.setTextDocumentLanguage(doc, "plaintext");
+
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
       }
     } else {
       vscode.window.showWarningMessage(

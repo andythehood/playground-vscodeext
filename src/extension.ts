@@ -21,7 +21,8 @@ import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
 import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
 import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
-import {posix} from "path";
+import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
+import {extname, posix} from "path";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -31,9 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const outputChannel = vscode.window.createOutputChannel("Data Transformer");
 
-  const workbenchConfig = vscode.workspace.getConfiguration(
-    "datatransformer.playground",
-  );
+  const workbenchConfig = vscode.workspace.getConfiguration("datatransformer");
   const serverUrl: string =
     workbenchConfig?.get("serverUrl") ||
     "https://datatransformer-playground.web.app";
@@ -84,20 +83,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.languages.createDiagnosticCollection("datatransformer");
   context.subscriptions.push(diagnosticCollection);
 
-  // const myScheme = "script";
-  // const myProvider = new (class implements vscode.TextDocumentContentProvider {
-  //   // emitter and its event
-  //   onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-  //   onDidChange = this.onDidChangeEmitter.event;
-
-  //   provideTextDocumentContent(uri: vscode.Uri): string {
-  //     // simply invoke cowsay, use uri-path as text
-  //     return scriptsTreeDataProvider.provideTextDocumentContent(uri);
-  //   }
-  // })();
-  // context.subscriptions.push(
-  //   vscode.workspace.registerTextDocumentContentProvider(myScheme, myProvider),
-  // );
+  const readOnlyContentProvider = new ReadOnlyContentProvider();
+  context.subscriptions.push(
+    vscode.workspace.registerTextDocumentContentProvider(
+      "readonly",
+      readOnlyContentProvider,
+    ),
+  );
 
   // Register the Sidebar Panels
 
@@ -127,6 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticCollection,
     variablesViewProvider,
     scriptsTreeDataProvider,
+    readOnlyContentProvider,
     serverUrl,
     outputChannel,
   );
@@ -206,10 +199,14 @@ export async function activate(context: vscode.ExtensionContext) {
           .toLowerCase()
           .startsWith(playgroundsRootUri.path.toLowerCase())
       ) {
-        vscode.languages.setTextDocumentLanguage(
-          editor.document,
-          "datatransformer",
-        );
+        if (extname(editor.document.fileName) !== ".test") {
+          vscode.languages.setTextDocumentLanguage(
+            editor.document,
+            "datatransformer",
+          );
+        } else {
+          vscode.languages.setTextDocumentLanguage(editor.document, "json");
+        }
 
         const playgroundSplits = editor?.document.uri.path
           .substring(playgroundsRootUri.path.length + 1)
@@ -255,6 +252,26 @@ export async function activate(context: vscode.ExtensionContext) {
     playgroundsTreeDataProvider.deletePlayground(node),
   );
 
+  vscode.commands.registerCommand(
+    "datatransformer.deleteSnapshot",
+    async (node) => {
+      const playgroundName = await playgroundsTreeDataProvider.deleteSnapshot(
+        node,
+      );
+
+      console.log("deleteSnapshot", playgroundName);
+
+      if (playgroundName) {
+        const playgroundNode = playgroundsTreeDataProvider.getPlayground(
+          playgroundName,
+          null,
+        );
+        await scriptsTreeDataProvider.set(playgroundNode.uri);
+        await variablesViewProvider.set(playgroundNode.uri);
+      }
+    },
+  );
+
   vscode.commands.registerCommand("datatransformer.addPlayground", async () => {
     const playground = await playgroundsTreeDataProvider.addPlayground();
 
@@ -288,6 +305,10 @@ export async function activate(context: vscode.ExtensionContext) {
     playgroundsTreeDataProvider.takeSnapshot(node);
   });
 
+  vscode.commands.registerCommand("datatransformer.renameSnapshot", (node) => {
+    playgroundsTreeDataProvider.renameSnapshot(node);
+  });
+
   vscode.commands.registerCommand(
     "datatransformer.exportPlayground",
     (node) => {
@@ -302,6 +323,33 @@ export async function activate(context: vscode.ExtensionContext) {
 
   vscode.commands.registerCommand("datatransformer.deleteScript", (node) => {
     scriptsTreeDataProvider.deleteScript(node);
+  });
+
+  vscode.commands.registerCommand(
+    "datatransformer.addTestCase",
+    async (node) => {
+      const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
+
+      scriptsTreeView.reveal(testCaseTreeItem, {select: true});
+
+      // console.log("datatransformer.addTestCase");
+
+      // const n = scriptsTreeDataProvider.getTestCaseNode(node.label);
+
+      // console.log("scriptsTreeDataProvider.getTestCaseNode", n);
+
+      // setTimeout(() => {
+      //   try {
+      //     scriptsTreeView.reveal(node.children[0], {select: true});
+      //   } catch {
+      //     console.log("unable to reveal testCaseTreeItem");
+      //   }
+      // }, 6000);
+    },
+  );
+
+  vscode.commands.registerCommand("datatransformer.deleteTestCase", (node) => {
+    scriptsTreeDataProvider.deleteTestCase(node);
   });
 
   vscode.commands.registerCommand(
@@ -329,114 +377,9 @@ export async function activate(context: vscode.ExtensionContext) {
     variablesViewProvider.expandAll();
   });
 
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.reset", () => {
-  //     extvarProvider.reset();
-  //   }),
-  // );
-
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.restore", () => {
-  //     extvarProvider.restore();
-  //   }),
-  // );
-
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("datatransformer.save", () => {
-  //     extvarProvider.save();
-  //   }),
-  // );
-
-  let insertSnippetCmd = vscode.commands.registerCommand(
-    "datatransformer.insertSnippet",
-    () => {
-      const snippet = `// Import the additional functions library
-local f = import 'functions';
-
-{
-  id: f.getExecutionId(),
-}
-`;
-      vscode.window.activeTextEditor?.insertSnippet(
-        new vscode.SnippetString(snippet),
-      );
-    },
-  );
-  context.subscriptions.push(insertSnippetCmd);
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("datatransformer.runScript", () => {
-      playgroundsTreeDataProvider.exec();
-    }),
-  );
-
-  let exampleTemplateCmd = vscode.commands.registerCommand(
-    "datatransformer.exampleTemplate",
-    () => {
-      const snippet = `// Import additional functions library
-local f = import "functions";
-
-// Import External Variables
-local j = f.extVar("myJson");
-local s = f.extVar("myString");
-local x = f.extVar("myXml");
-local i = f.extVar("myInt");
-local d = f.extVar("myDouble");
-local strArr = f.extVar("myStrArray");
-local intArr = f.extVar("myIntArray");
-
-// Invoke functions using Standard or the additional library Functions below
-// For standard library functions, you can also use f.name() to refer to them
-//   e.g f.type() and std.type() are equivalent 
-
-{
-  avg: f.avg(intArr),
-  contains: f.contains(strArr, s),
-  maxArray: f.maxArray(intArr),
-  minArray: f.minArray(intArr),
-  remove: f.remove(strArr, s),
-  removeAt: f.removeAt(intArr, 3),
-  sum: f.sum(intArr),
-  groupBy: f.groupBy(intArr, function(x) x >= f.avg(intArr)),
-
-  sha1: f.sha1(s),
-  sha256: f.sha256(s),
-  sha512: f.sha512(s),
-
-  isDecimal: f.isDecimal(d),
-  isInteger: f.isInteger(i),
-  isOdd: f.isOdd(i),
-  isEven: f.isEven(i),
-
-  parseXml: f.parseXml(x, format="badgerfish"),
-
-  nowInMillis: f.nowInMillis(),
-  uuid: f.uuid(),
-}`;
-
-      vscode.window.activeTextEditor?.insertSnippet(
-        new vscode.SnippetString(snippet),
-      );
-    },
-  );
-  context.subscriptions.push(exampleTemplateCmd);
-
-  let newTemplateCmd = vscode.commands.registerCommand(
-    "datatransformer.newTemplate",
-    () => {
-      const snippet = `// Import the additional functions library
-local f = import "functions";
-
-{
-  id: f.getExecutionId(),
-}`;
-
-      vscode.window.activeTextEditor?.insertSnippet(
-        new vscode.SnippetString(snippet),
-      );
-    },
-  );
-  context.subscriptions.push(newTemplateCmd);
+  vscode.commands.registerCommand("datatransformer.runScript", () => {
+    playgroundsTreeDataProvider.exec();
+  });
 }
 
 // This method is called when your extension is deactivated

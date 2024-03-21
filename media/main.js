@@ -189,15 +189,10 @@
    * @param {Array<{ name:string, type:string, value: string , open?: boolean} >} extVars
    */
   function updateExtVars(extVars) {
-    console.log("eve=", extVars);
-
     const ul = document.getElementById("extvarUL");
     if (!ul) {
-      console.log("wtf");
       return;
     }
-
-    console.log(extVars.length);
 
     ul.textContent = "";
     for (const extVar of extVars) {
