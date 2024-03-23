@@ -45,11 +45,7 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
   ) {
     this._view = webviewView;
 
-    console.log("resolveWebviewView", context.state);
-
     webviewView.onDidChangeVisibility(async () => {
-      console.log("onDidChangeVisibility", webviewView.visible);
-
       if (webviewView.visible) {
         if (this.extVarsUri) {
           const bytes = await vscode.workspace.fs.readFile(this.extVarsUri);
@@ -85,8 +81,6 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case "stateUpdated": {
-          console.log("updatedState=", data.value);
-
           if (this.extVarsUri) {
             await vscode.workspace.fs.writeFile(
               this.extVarsUri,
@@ -120,14 +114,10 @@ export class VariablesViewProvider implements vscode.WebviewViewProvider {
   }
 
   public async set(playgroundUri: vscode.Uri) {
-    console.log("set extvars", playgroundUri);
-
     let extVars: any = [];
 
     if (playgroundUri) {
-      const extVarsUri = playgroundUri.with({
-        path: posix.join(playgroundUri.path, "extVars.json"),
-      });
+      const extVarsUri = vscode.Uri.joinPath(playgroundUri, "extVars.json");
       this.extVarsUri = extVarsUri;
 
       const bytes = await vscode.workspace.fs.readFile(extVarsUri);

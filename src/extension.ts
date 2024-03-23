@@ -15,6 +15,7 @@
 */
 
 import * as vscode from "vscode";
+import {extname} from "path";
 
 import {VariablesViewProvider} from "./VariablesViewProvider";
 import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
@@ -22,7 +23,6 @@ import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
 import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
 import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
-import {extname, posix} from "path";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -48,9 +48,10 @@ export async function activate(context: vscode.ExtensionContext) {
         playgroundStorageLocation,
       );
 
-      playgroundsRootUri = playgroundsStorageLocationUri.with({
-        path: posix.join(playgroundsStorageLocationUri.path, "playgrounds"),
-      });
+      playgroundsRootUri = vscode.Uri.joinPath(
+        playgroundsStorageLocationUri,
+        "playgrounds",
+      );
     } catch (e) {
       vscode.window.showErrorMessage(
         `Unable to create playgrounds directory: ${playgroundStorageLocation}`,
@@ -59,9 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   } else if (context.storageUri) {
     await vscode.workspace.fs.createDirectory(context.storageUri);
-    playgroundsRootUri = context.storageUri.with({
-      path: posix.join(context.storageUri.path, "playgrounds"),
-    });
+    playgroundsRootUri = vscode.Uri.joinPath(context.storageUri, "playgrounds");
   } else {
     vscode.window.showInformationMessage(
       "No Workspace or Folder open. Please open a Workspace or Folder to use Data Transformer Playgrounds.",
@@ -110,7 +109,6 @@ export async function activate(context: vscode.ExtensionContext) {
     canSelectMany: false,
   });
   scriptsTreeView.onDidChangeSelection((e) => {
-    console.log("onDidChangeSelection", e);
     scriptsTreeDataProvider.onSelect(e.selection[0]);
   });
 
@@ -134,14 +132,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   playgroundsTreeView.onDidChangeSelection(async (e) => {
-    console.log("onDidChangeSelection", e);
     await playgroundsTreeDataProvider.onSelect(e.selection[0]);
-    // scriptsTreeView.reveal(scriptsTreeDataProvider.getDefault(), {
-    //   select: true,
-    // });
 
     const editor = vscode.window.activeTextEditor;
-    console.log("reveal script", editor);
     setTimeout(
       () =>
         scriptsTreeView.reveal(
@@ -192,8 +185,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      console.log("Active Editor Changed: " + editor?.document.uri.path);
-
       if (
         editor?.document.uri.path
           .toLowerCase()
@@ -211,12 +202,6 @@ export async function activate(context: vscode.ExtensionContext) {
         const playgroundSplits = editor?.document.uri.path
           .substring(playgroundsRootUri.path.length + 1)
           .split("/");
-
-        console.log(
-          playgroundSplits.length,
-          playgroundSplits[0],
-          playgroundSplits[2],
-        );
 
         if (playgroundSplits.length > 3) {
           playgroundsTreeView.reveal(
@@ -259,8 +244,6 @@ export async function activate(context: vscode.ExtensionContext) {
         node,
       );
 
-      console.log("deleteSnapshot", playgroundName);
-
       if (playgroundName) {
         const playgroundNode = playgroundsTreeDataProvider.getPlayground(
           playgroundName,
@@ -275,7 +258,6 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("datatransformer.addPlayground", async () => {
     const playground = await playgroundsTreeDataProvider.addPlayground();
 
-    console.log("addPlayground", playground);
     setTimeout(
       () =>
         playgroundsTreeView.reveal(
@@ -331,20 +313,6 @@ export async function activate(context: vscode.ExtensionContext) {
       const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
 
       scriptsTreeView.reveal(testCaseTreeItem, {select: true});
-
-      // console.log("datatransformer.addTestCase");
-
-      // const n = scriptsTreeDataProvider.getTestCaseNode(node.label);
-
-      // console.log("scriptsTreeDataProvider.getTestCaseNode", n);
-
-      // setTimeout(() => {
-      //   try {
-      //     scriptsTreeView.reveal(node.children[0], {select: true});
-      //   } catch {
-      //     console.log("unable to reveal testCaseTreeItem");
-      //   }
-      // }, 6000);
     },
   );
 
@@ -355,7 +323,6 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand(
     "datatransformer.selectAndRunScript",
     async (node) => {
-      console.log("selectAndRunScript", node);
       await scriptsTreeDataProvider.onSelect(node);
 
       await scriptsTreeView.reveal(node, {

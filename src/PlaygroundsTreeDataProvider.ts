@@ -15,7 +15,7 @@
 */
 
 import * as vscode from "vscode";
-import {basename, extname, posix} from "path";
+import {basename, extname, join} from "path";
 import {VariablesViewProvider} from "./VariablesViewProvider";
 import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
 import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
@@ -49,20 +49,14 @@ export class SnapshotTreeItem extends vscode.TreeItem {
 export class PlaygroundTreeItem extends vscode.TreeItem {
   // type: TreeItemType;
   iconPath: vscode.ThemeIcon | IconPath = {
-    light: posix.join(
+    light: join(
       __filename,
       "..",
       "..",
       "media",
       "jsonnetmapper_24px_bluey.svg",
     ),
-    dark: posix.join(
-      __filename,
-      "..",
-      "..",
-      "media",
-      "jsonnetmapper_24px_bluey.svg",
-    ),
+    dark: join(__filename, "..", "..", "media", "jsonnetmapper_24px_bluey.svg"),
   };
   children: SnapshotTreeItem[] | undefined;
   uri: vscode.Uri;
@@ -102,8 +96,6 @@ export class PlaygroundsTreeDataProvider
     private readonly serverUrl: string,
     private readonly outputChannel: vscode.OutputChannel,
   ) {
-    console.log("constructor", playgroundsRootUri);
-
     this.treeData = [];
   }
 
@@ -179,8 +171,6 @@ export class PlaygroundsTreeDataProvider
   async getChildren(
     node?: PlaygroundTreeItem | undefined,
   ): Promise<PlaygroundTreeItem[] | SnapshotTreeItem[]> {
-    console.log("getChildren", node);
-
     if (node === undefined) {
       this.treeData = [];
 
@@ -194,13 +184,15 @@ export class PlaygroundsTreeDataProvider
           );
 
           for (const [name, _] of playgroundDirEntries) {
-            const playgroundDirUri = this.playgroundsRootUri.with({
-              path: posix.join(this.playgroundsRootUri.path, name),
-            });
+            const playgroundDirUri = vscode.Uri.joinPath(
+              this.playgroundsRootUri,
+              name,
+            );
 
-            const snapshotsDirUri = playgroundDirUri.with({
-              path: posix.join(playgroundDirUri.path, "snapshots"),
-            });
+            const snapshotsDirUri = vscode.Uri.joinPath(
+              playgroundDirUri,
+              "snapshots",
+            );
 
             const snapshotsDirEntries = (
               await vscode.workspace.fs.readDirectory(snapshotsDirUri)
@@ -211,13 +203,15 @@ export class PlaygroundsTreeDataProvider
             const children: SnapshotTreeItem[] = [];
 
             for (const [snapshotDirName, _] of snapshotsDirEntries) {
-              const snapshotDirUri = snapshotsDirUri.with({
-                path: posix.join(snapshotsDirUri.path, snapshotDirName),
-              });
+              const snapshotDirUri = vscode.Uri.joinPath(
+                snapshotsDirUri,
+                snapshotDirName,
+              );
 
-              const snapshotMetaUri = snapshotDirUri.with({
-                path: posix.join(snapshotDirUri.path, "meta.json"),
-              });
+              const snapshotMetaUri = vscode.Uri.joinPath(
+                snapshotDirUri,
+                "meta.json",
+              );
 
               let label = "";
 
@@ -287,10 +281,7 @@ export class PlaygroundsTreeDataProvider
     );
 
     for (const [name, _] of scriptsDirEntries) {
-      const scriptsUri = scriptsDirUri.with({
-        path: posix.join(scriptsDirUri.path, name),
-      });
-      console.log("closing", scriptsUri.path);
+      const scriptsUri = vscode.Uri.joinPath(scriptsDirUri, name);
       await this.closeFileIfOpen(scriptsUri);
     }
   }
@@ -304,9 +295,11 @@ export class PlaygroundsTreeDataProvider
     );
 
     for (const [name, _] of snapshotsDirEntries) {
-      const scriptsDirUri = snapshotsDirUri.with({
-        path: posix.join(snapshotsDirUri.path, name, "scripts"),
-      });
+      const scriptsDirUri = vscode.Uri.joinPath(
+        snapshotsDirUri,
+        name,
+        "scripts",
+      );
       this.closeScripts(scriptsDirUri);
     }
   }
@@ -318,16 +311,10 @@ export class PlaygroundsTreeDataProvider
         if (answer === "Yes") {
           // Run function
           try {
-            console.log("deleting", node.uri);
-
-            const scriptsDirUri = node.uri.with({
-              path: posix.join(node.uri.path, "scripts"),
-            });
+            const scriptsDirUri = vscode.Uri.joinPath(node.uri, "scripts");
             await this.closeScripts(scriptsDirUri);
 
-            const snapshotsDirUri = node.uri.with({
-              path: posix.join(node.uri.path, "snapshots"),
-            });
+            const snapshotsDirUri = vscode.Uri.joinPath(node.uri, "snapshots");
             await this.closeSnapshotScripts(snapshotsDirUri);
 
             await vscode.workspace.fs.delete(node.uri, {
@@ -352,11 +339,7 @@ export class PlaygroundsTreeDataProvider
     if (answer === "Yes") {
       // Run function
       try {
-        console.log("deleting", node.uri, node.parent);
-
-        const scriptsDirUri = node.uri.with({
-          path: posix.join(node.uri.path, "scripts"),
-        });
+        const scriptsDirUri = vscode.Uri.joinPath(node.uri, "scripts");
         await this.closeScripts(scriptsDirUri);
 
         await vscode.workspace.fs.delete(node.uri, {
@@ -373,17 +356,22 @@ export class PlaygroundsTreeDataProvider
   }
 
   private createFiles = async (uri: vscode.Uri, json: any) => {
-    const extVarsUri = uri.with({
-      path: posix.join(uri.path, "extVars.json"),
-    });
+    if (json.id && json.label) {
+      const snapshotMetaUri = vscode.Uri.joinPath(uri, "meta.json");
+      const snapshotMeta = {label: json.label};
+      await vscode.workspace.fs.writeFile(
+        snapshotMetaUri,
+        this.textEncoder.encode(JSON.stringify(snapshotMeta, null, 2)),
+      );
+    }
+
+    const extVarsUri = vscode.Uri.joinPath(uri, "extVars.json");
     await vscode.workspace.fs.writeFile(
       extVarsUri,
       this.textEncoder.encode(JSON.stringify(json.extVars || [], null, 2)),
     );
 
-    const scriptsDirUri = uri.with({
-      path: posix.join(uri.path, "scripts"),
-    });
+    const scriptsDirUri = vscode.Uri.joinPath(uri, "scripts");
 
     try {
       await vscode.workspace.fs.createDirectory(scriptsDirUri);
@@ -393,19 +381,25 @@ export class PlaygroundsTreeDataProvider
 
     if (json.scripts) {
       json.scripts.map(async (script: any) => {
-        const scriptUri = scriptsDirUri.with({
-          path: posix.join(scriptsDirUri.path, script.name),
-        });
+        const scriptUri = vscode.Uri.joinPath(scriptsDirUri, script.name);
 
         await vscode.workspace.fs.writeFile(
           scriptUri,
           this.textEncoder.encode(script.snippet),
         );
+
+        if (script.testCase) {
+          const testCaseUri = scriptUri.with({
+            path: scriptUri.path + ".test",
+          });
+          await vscode.workspace.fs.writeFile(
+            testCaseUri,
+            this.textEncoder.encode(script.testCase),
+          );
+        }
       });
     } else {
-      const scriptUri = scriptsDirUri.with({
-        path: posix.join(scriptsDirUri.path, "default"),
-      });
+      const scriptUri = vscode.Uri.joinPath(scriptsDirUri, "default");
       await vscode.workspace.fs.writeFile(
         scriptUri,
         this.textEncoder.encode(json.snippet),
@@ -414,8 +408,6 @@ export class PlaygroundsTreeDataProvider
   };
 
   public async renameSnapshot(node: SnapshotTreeItem) {
-    console.log("renameSnapshot", node.uri);
-
     const snapshotName = await vscode.window.showInputBox({
       placeHolder: "snapshot-name",
       title: "Snapshot Name (or blank to revert to auto name)\n",
@@ -425,9 +417,7 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    const snapshotMetaUri = node.uri.with({
-      path: posix.join(node.uri.path, "meta.json"),
-    });
+    const snapshotMetaUri = vscode.Uri.joinPath(node.uri, "meta.json");
 
     let label = "";
     if (snapshotName !== "") {
@@ -448,8 +438,6 @@ export class PlaygroundsTreeDataProvider
   }
 
   public async takeSnapshot(node: PlaygroundTreeItem) {
-    console.log("takeSnapshot", node.uri);
-
     const snapshotName = await vscode.window.showInputBox({
       placeHolder: "snapshot-name",
       title: "Snapshot Name (or blank for auto name)",
@@ -459,13 +447,13 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    console.log("snapshotName", snapshotName);
-
     const snapshotId = Date.now().toString();
 
-    const snapshotDirUri = node.uri.with({
-      path: posix.join(node.uri.path, "snapshots", snapshotId),
-    });
+    const snapshotDirUri = vscode.Uri.joinPath(
+      node.uri,
+      "snapshots",
+      snapshotId,
+    );
 
     try {
       await vscode.workspace.fs.createDirectory(snapshotDirUri);
@@ -474,9 +462,7 @@ export class PlaygroundsTreeDataProvider
     }
 
     try {
-      const snapshotMetaUri = snapshotDirUri.with({
-        path: posix.join(snapshotDirUri.path, "meta.json"),
-      });
+      const snapshotMetaUri = vscode.Uri.joinPath(snapshotDirUri, "meta.json");
 
       const label =
         new Date(parseInt(snapshotId)).toDateString() +
@@ -490,20 +476,12 @@ export class PlaygroundsTreeDataProvider
       );
 
       await vscode.workspace.fs.copy(
-        node.uri.with({
-          path: posix.join(node.uri.path, "extVars.json"),
-        }),
-        snapshotDirUri.with({
-          path: posix.join(snapshotDirUri.path, "extVars.json"),
-        }),
+        vscode.Uri.joinPath(node.uri, "extVars.json"),
+        vscode.Uri.joinPath(snapshotDirUri, "extVars.json"),
       );
       await vscode.workspace.fs.copy(
-        node.uri.with({
-          path: posix.join(node.uri.path, "scripts"),
-        }),
-        snapshotDirUri.with({
-          path: posix.join(snapshotDirUri.path, "scripts"),
-        }),
+        vscode.Uri.joinPath(node.uri, "scripts"),
+        vscode.Uri.joinPath(snapshotDirUri, "scripts"),
       );
     } catch (e) {
       vscode.window.showErrorMessage("unable to copy playground");
@@ -514,8 +492,6 @@ export class PlaygroundsTreeDataProvider
   }
 
   public async exportPlayground(node: PlaygroundTreeItem) {
-    console.log("exportPlayground", node);
-
     const options: vscode.OpenDialogOptions = {
       canSelectMany: false,
       openLabel: "Select",
@@ -529,8 +505,6 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    console.log("Selected folder", folderUri[0].path);
-
     const d = new Date();
     const localeDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
     const fileName = `playground-${node.label}-${localeDate
@@ -540,7 +514,7 @@ export class PlaygroundsTreeDataProvider
     const getScripts = async (uri: vscode.Uri) => {
       const scripts = [];
 
-      const scriptsDirUri = uri.with({path: posix.join(uri.path, "scripts")});
+      const scriptsDirUri = vscode.Uri.joinPath(uri, "scripts");
 
       const scriptsDirEntries = (
         await vscode.workspace.fs.readDirectory(scriptsDirUri)
@@ -555,15 +529,23 @@ export class PlaygroundsTreeDataProvider
         if (name !== "default") {
           continue;
         }
-        const scriptUri = scriptsDirUri.with({
-          path: posix.join(scriptsDirUri.path, name),
+        const scriptUri = vscode.Uri.joinPath(scriptsDirUri, name);
+
+        const snippet = await vscode.workspace.fs.readFile(scriptUri);
+        const testCaseUri = scriptUri.with({
+          path: scriptUri.path + ".test",
         });
 
-        const bytes = await vscode.workspace.fs.readFile(scriptUri);
+        let testCase: Uint8Array = null;
+        try {
+          testCase = await vscode.workspace.fs.readFile(testCaseUri);
+        } catch {}
+
         const script = {
           name: name,
-          snippet: bytes.toString(),
+          snippet: snippet.toString(),
           errorMessage: "",
+          ...(testCase && {testCase: testCase.toString()}),
         };
         scripts.push(script);
       }
@@ -572,15 +554,22 @@ export class PlaygroundsTreeDataProvider
         if (name === "default") {
           continue;
         }
-        const scriptUri = scriptsDirUri.with({
-          path: posix.join(scriptsDirUri.path, name),
+        const scriptUri = vscode.Uri.joinPath(scriptsDirUri, name);
+        const testCaseUri = scriptUri.with({
+          path: scriptUri.path + ".test",
         });
 
-        const bytes = await vscode.workspace.fs.readFile(scriptUri);
+        let testCase: Uint8Array = null;
+        try {
+          testCase = await vscode.workspace.fs.readFile(testCaseUri);
+        } catch {}
+
+        const snippet = await vscode.workspace.fs.readFile(scriptUri);
         const script = {
           name: name,
-          snippet: bytes.toString(),
+          snippet: snippet.toString(),
           errorMessage: "",
+          ...(testCase && {testCase: testCase.toString()}),
         };
 
         scripts.push(script);
@@ -589,9 +578,7 @@ export class PlaygroundsTreeDataProvider
     };
 
     const getExtVars = async (uri: vscode.Uri) => {
-      const extVarsUri = uri.with({
-        path: posix.join(uri.path, "extVars.json"),
-      });
+      const extVarsUri = vscode.Uri.joinPath(uri, "extVars.json");
 
       const bytes = await vscode.workspace.fs.readFile(extVarsUri);
       return JSON.parse(bytes.toString() || "[]");
@@ -600,9 +587,7 @@ export class PlaygroundsTreeDataProvider
     const getSnapshots = async (uri: vscode.Uri) => {
       const snapshots = [];
 
-      const snapshotsDirUri = uri.with({
-        path: posix.join(uri.path, "snapshots"),
-      });
+      const snapshotsDirUri = vscode.Uri.joinPath(uri, "snapshots");
 
       const snapshotsDirEntries = (
         await vscode.workspace.fs.readDirectory(snapshotsDirUri)
@@ -612,14 +597,13 @@ export class PlaygroundsTreeDataProvider
       );
 
       for (const [name, _] of snapshotsDirEntries) {
-        const snapshotDirUri = snapshotsDirUri.with({
-          path: posix.join(snapshotsDirUri.path, name),
-        });
+        const snapshotDirUri = vscode.Uri.joinPath(snapshotsDirUri, name);
 
         // check for metadata
-        const snapshotMetaUri = snapshotDirUri.with({
-          path: posix.join(snapshotDirUri.path, "meta.json"),
-        });
+        const snapshotMetaUri = vscode.Uri.joinPath(
+          snapshotDirUri,
+          "meta.json",
+        );
 
         let label = "";
 
@@ -657,9 +641,7 @@ export class PlaygroundsTreeDataProvider
       extVars: await getExtVars(node.uri),
     };
 
-    const fileUri = folderUri[0].with({
-      path: posix.join(folderUri[0].path, fileName),
-    });
+    const fileUri = vscode.Uri.joinPath(folderUri[0], fileName);
 
     await vscode.workspace.fs.writeFile(
       fileUri,
@@ -672,8 +654,6 @@ export class PlaygroundsTreeDataProvider
   }
 
   public async importPlayground(): Promise<string> {
-    console.log("importPlayground");
-
     const options: vscode.OpenDialogOptions = {
       canSelectMany: false,
       openLabel: "Open",
@@ -684,8 +664,6 @@ export class PlaygroundsTreeDataProvider
 
     const fileUri = await vscode.window.showOpenDialog(options);
     if (fileUri && fileUri[0]) {
-      console.log("Selected file", fileUri[0]);
-
       const bytes = await vscode.workspace.fs.readFile(fileUri[0]);
       const json = JSON.parse(bytes.toString());
 
@@ -696,9 +674,10 @@ export class PlaygroundsTreeDataProvider
         return "";
       }
 
-      const playgroundDirUri = this.playgroundsRootUri.with({
-        path: posix.join(this.playgroundsRootUri.path, json.name),
-      });
+      const playgroundDirUri = vscode.Uri.joinPath(
+        this.playgroundsRootUri,
+        json.name,
+      );
 
       try {
         await vscode.workspace.fs.createDirectory(playgroundDirUri);
@@ -708,9 +687,10 @@ export class PlaygroundsTreeDataProvider
 
       await this.createFiles(playgroundDirUri, json);
 
-      const snapshotsDirUri = playgroundDirUri.with({
-        path: posix.join(playgroundDirUri.path, "snapshots"),
-      });
+      const snapshotsDirUri = vscode.Uri.joinPath(
+        playgroundDirUri,
+        "snapshots",
+      );
 
       try {
         await vscode.workspace.fs.createDirectory(snapshotsDirUri);
@@ -719,9 +699,10 @@ export class PlaygroundsTreeDataProvider
       }
 
       json.snapshots.map(async (snapshot: any) => {
-        const snapshotUri = snapshotsDirUri.with({
-          path: posix.join(snapshotsDirUri.path, snapshot.id.toString()),
-        });
+        const snapshotUri = vscode.Uri.joinPath(
+          snapshotsDirUri,
+          snapshot.id.toString(),
+        );
         await this.createFiles(snapshotUri, snapshot);
       });
 
@@ -733,9 +714,6 @@ export class PlaygroundsTreeDataProvider
   public async onSelect(
     node: PlaygroundTreeItem | SnapshotTreeItem,
   ): Promise<void> {
-    console.log("onSelect1", node instanceof PlaygroundTreeItem);
-    console.log("onSelect2", node instanceof SnapshotTreeItem);
-
     if (!node) {
       vscode.commands.executeCommand(
         "setContext",
@@ -767,8 +745,6 @@ export class PlaygroundsTreeDataProvider
   }
 
   public async addPlayground(): Promise<string> {
-    console.log("add playground");
-
     const playgroundName = await vscode.window.showInputBox({
       placeHolder: "playground-name",
       title: "Playground Name",
@@ -817,15 +793,14 @@ export class PlaygroundsTreeDataProvider
       ],
     };
 
-    const playgroundDirUri = this.playgroundsRootUri.with({
-      path: posix.join(this.playgroundsRootUri.path, json.name),
-    });
+    const playgroundDirUri = vscode.Uri.joinPath(
+      this.playgroundsRootUri,
+      json.name,
+    );
 
     this.createFiles(playgroundDirUri, json);
 
-    const snapshotsDirUri = playgroundDirUri.with({
-      path: posix.join(playgroundDirUri.path, "snapshots"),
-    });
+    const snapshotsDirUri = vscode.Uri.joinPath(playgroundDirUri, "snapshots");
 
     try {
       await vscode.workspace.fs.createDirectory(snapshotsDirUri);
@@ -848,7 +823,6 @@ export class PlaygroundsTreeDataProvider
       return;
     }
 
-    console.log("exec", editor);
     if (
       editor?.document.uri.path
         .toLowerCase()
@@ -863,13 +837,6 @@ export class PlaygroundsTreeDataProvider
         .substring(this.playgroundsRootUri.path.length + 1)
         .split("/");
 
-      console.log(
-        playgroundSplits,
-        playgroundSplits.length,
-        playgroundSplits[0],
-        playgroundSplits[2],
-      );
-
       let playgroundTreeItem: PlaygroundTreeItem;
 
       if (playgroundSplits.length > 3) {
@@ -881,9 +848,10 @@ export class PlaygroundsTreeDataProvider
         playgroundTreeItem = this.getPlayground(playgroundSplits[0], null);
       }
 
-      const extVarsUri = playgroundTreeItem.uri.with({
-        path: posix.join(playgroundTreeItem.uri.path, "extVars.json"),
-      });
+      const extVarsUri = vscode.Uri.joinPath(
+        playgroundTreeItem.uri,
+        "extVars.json",
+      );
 
       const bytes = await vscode.workspace.fs.readFile(extVarsUri);
       const extVars = JSON.parse(bytes.toString());
@@ -916,14 +884,11 @@ export class PlaygroundsTreeDataProvider
             basename(editor.document.fileName).length + 1,
           );
 
-          console.log(errorMessage);
-
           const location = errorMessage.substring(0, errorMessage.indexOf(" "));
 
           const line = parseInt(location.split(":")[0]);
           const charRange = location.split(":")[1];
 
-          console.log(line, charRange);
           let startPos = 0;
           let endPos = 0;
 
@@ -956,10 +921,6 @@ export class PlaygroundsTreeDataProvider
         }
 
         const uri = vscode.Uri.parse("readonly:").with({path: title});
-
-        console.log(uri);
-
-        // this.myProvider.setContentAndRefresh(uri, data.message);
 
         const doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
 

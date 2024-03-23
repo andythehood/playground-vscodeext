@@ -30,8 +30,6 @@ export class LanguageFeaturesProviders {
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
       ): Promise<vscode.TextEdit[]> {
-        console.log("provideDocumentFormattingEdits");
-
         const text = document.getText();
 
         const r = new vscode.Range(
@@ -57,15 +55,11 @@ export class LanguageFeaturesProviders {
         };
 
         if (status !== 200) {
-          // connection.sendNotification(NotificationType)
-          console.log("Error calling Format:", message);
-
           const location = message.substring(0, message.indexOf(" "));
 
           const line = parseInt(location.split(":")[0]);
           const charRange = location.split(":")[1];
 
-          console.log("errmsg", line, charRange);
           let startPos = 0;
           let endPos = 0;
 
@@ -103,8 +97,6 @@ export class LanguageFeaturesProviders {
       document: vscode.TextDocument,
       position: vscode.Position,
     ): vscode.ProviderResult<vscode.CompletionItem[]> {
-      console.log("provideCompletionItems");
-
       const lineAt = document.lineAt(position.line);
 
       if (lineAt.text.match(/\bf\.$/)) {

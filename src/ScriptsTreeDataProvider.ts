@@ -15,7 +15,7 @@
 */
 
 import * as vscode from "vscode";
-import {basename, extname, posix} from "path";
+import {basename, extname, join} from "path";
 
 type IconPath = {
   light: string | vscode.Uri;
@@ -43,8 +43,8 @@ export class TestCaseTreeItem extends vscode.TreeItem {
 export class ScriptsTreeItem extends vscode.TreeItem {
   // iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("json");
   iconPath: vscode.ThemeIcon | IconPath = {
-    light: posix.join(__filename, "..", "..", "media", "jsonnet_light.svg"),
-    dark: posix.join(__filename, "..", "..", "media", "jsonnet_dark.svg"),
+    light: join(__filename, "..", "..", "media", "jsonnet_light.svg"),
+    dark: join(__filename, "..", "..", "media", "jsonnet_dark.svg"),
   };
 
   uri: vscode.Uri;
@@ -74,8 +74,6 @@ export class ScriptsTreeDataProvider
   private scriptsDirUri: vscode.Uri | null = null;
 
   constructor() {
-    console.log("constructor");
-
     this.treeData = [];
   }
 
@@ -93,7 +91,6 @@ export class ScriptsTreeDataProvider
   getParent(
     node: ScriptsTreeItem | TestCaseTreeItem,
   ): vscode.ProviderResult<ScriptsTreeItem> {
-    console.log("getParent");
     if (node instanceof ScriptsTreeItem) {
       return null;
     } else {
@@ -106,8 +103,6 @@ export class ScriptsTreeDataProvider
   }
 
   getActiveOrDefault(uri: vscode.Uri): ScriptsTreeItem | TestCaseTreeItem {
-    console.log("getActiveOrDefault", uri, this.treeData);
-
     if (!uri) {
       return this.treeData[0];
     }
@@ -147,7 +142,6 @@ export class ScriptsTreeDataProvider
   async getChildren(
     node?: ScriptsTreeItem | undefined,
   ): Promise<ScriptsTreeItem[] | TestCaseTreeItem[]> {
-    console.log("ScriptsTreeItem:getChildren", node);
     if (node === undefined) {
       return this.treeData;
     }
@@ -161,9 +155,11 @@ export class ScriptsTreeDataProvider
 
     // let scriptsDirEntries: [string, vscode.FileType][] = [];
     if (playgroundUri) {
-      const scriptsDirUri = playgroundUri.with({
-        path: posix.join(playgroundUri.path, "scripts"),
-      });
+      const scriptsDirUri = vscode.Uri.joinPath(playgroundUri, "scripts");
+
+      // const scriptsDirUri = playgroundUri.with({
+      //   path: posix.join(playgroundUri.path, "scripts"),
+      // });
       this.scriptsDirUri = scriptsDirUri;
 
       const scriptsDirEntries = (
@@ -179,9 +175,7 @@ export class ScriptsTreeDataProvider
         const treeData: ScriptsTreeItem[] = [];
 
         for (const [name, _] of scriptsDirEntries) {
-          const scriptUri = scriptsDirUri.with({
-            path: posix.join(scriptsDirUri.path, name),
-          });
+          const scriptUri = vscode.Uri.joinPath(scriptsDirUri, name);
 
           const children: TestCaseTreeItem[] = [];
 
@@ -289,9 +283,7 @@ export class ScriptsTreeDataProvider
     const snippet =
       "\n// Import the additional functions library\nlocal f = import 'functions';\n\n{\n  id: f.getExecutionId(),\n}";
 
-    const scriptUri = this.scriptsDirUri.with({
-      path: posix.join(this.scriptsDirUri.path, scriptName),
-    });
+    const scriptUri = vscode.Uri.joinPath(this.scriptsDirUri, scriptName);
 
     await vscode.workspace.fs.writeFile(
       scriptUri,
@@ -334,7 +326,6 @@ export class ScriptsTreeDataProvider
         path: node.uri.path + ".test",
       });
 
-      console.log("addTestCase", testCaseUri);
       try {
         await vscode.workspace.fs.stat(testCaseUri);
       } catch {
@@ -353,7 +344,6 @@ export class ScriptsTreeDataProvider
 
       const index = this.treeData.findIndex((n) => n.label === node.label);
 
-      console.log("treeData.findIndex", index);
       this.treeData[index].collapsibleState =
         vscode.TreeItemCollapsibleState.Expanded;
       this.treeData[index].children.push(testCaseTreeItem);
@@ -400,10 +390,8 @@ export class ScriptsTreeDataProvider
 
   getTestCaseNode(label: string): TestCaseTreeItem {
     const parent = this.treeData.find((node) => node.label === label);
-    console.log("getTestCaseNode", parent);
 
     if (parent.children.length === 0) {
-      console.log("wtf");
       return null;
     } else {
       return parent.children[0];
