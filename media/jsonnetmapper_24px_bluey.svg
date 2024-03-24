@@ -1,11 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
   <!-- <path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3h7z" /> -->
 
-  <path fill="#3B78E7" d="M22 11V3h-7V11z M17 5h3v4h-3v-4z" />
-  <path fill="#3B78E7" d="M09 11V3h-7V11z M7 9H4V5h3v4z" />
-  <path fill="#3B78E7" d="M22 21V13h-7V21z M17 15h3v4h-3V5z" />
-  <path fill="#669df6" d="M15 06V8h-6v-2z" />
-  <path fill="#669df6" d="M15 18v-2h-2v-8h-2v10z" />
+  <path fill="#669df6"
+    d="M2 3v8h7v-3h2v10h4v3h7v-8h-7v3h-2v-8h2v3h7v-8h-7v3h-6v-3z     M7 9H4v-4h3v4z  M17 5h3v4h-3v-4z M17 15h3v4h-3v-4z" />
 
+  <path fill="#4285f4" d="M2 3l1.0 -0.5h7l-1.0 0.5z M4 9l1.0 -0.5h2.0v0.5z" />
+  <path fill="#4285f4" d="M15 3l1.0 -0.5h7l-1.0 0.5z M17 9l1.0 -0.5h2.0v0.5z" />
+  <path fill="#4285f4" d="M15 13l1.0 -0.5h7l-1.0 0.5z M17 19l1.0 -0.5h2.0v0.5z" />
+  <path fill="#4285f4" d="M9 6l1.0 -0.5h5v0.5z M13 16l1.0 -0.5h1.0v0.5z" />
+
+  <path fill="#185ABC" d="M9 6v-3l1.0 -0.5v3z M9 11v-3h1.0v2.5z M22 11v-8l1.0 -0.5v8z M22 21v-8l1.0 -0.5v8z " />
+  <path fill="#185ABC" d="M4 09v-4h1.0v3.5z M17 9v-4h1.0v3.5z M17 19v-4h1.0v3.5z M13 16v-8h1.0v7.5z " />
 
 </svg>

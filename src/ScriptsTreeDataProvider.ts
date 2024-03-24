@@ -397,4 +397,35 @@ export class ScriptsTreeDataProvider
       return parent.children[0];
     }
   }
+
+  async saveAsTestCase(node: ScriptsTreeItem) {
+    console.log(node, node instanceof ScriptsTreeItem);
+
+    const answer = await vscode.window.showInformationMessage(
+      `Save as Test Case for ${node.label}?`,
+      "Yes",
+      "No",
+    );
+
+    if (answer === "Yes") {
+      const testCaseUri = node.uri.with({
+        path: node.uri.path + ".test",
+      });
+
+      const editor = vscode.window.activeTextEditor;
+
+      await vscode.workspace.fs.writeFile(
+        testCaseUri,
+        this.textEncoder.encode(editor.document.getText()),
+      );
+
+      const testCaseTreeItem = new TestCaseTreeItem(
+        "expected output",
+        testCaseUri,
+      );
+      node.children = [testCaseTreeItem];
+
+      this.refresh();
+    }
+  }
 }

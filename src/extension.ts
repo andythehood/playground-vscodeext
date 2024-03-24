@@ -21,7 +21,11 @@ import {VariablesViewProvider} from "./VariablesViewProvider";
 import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
 import {LanguageFeaturesProviders} from "./LanguageFeatureProviders";
 import {PlaygroundsTreeDataProvider} from "./PlaygroundsTreeDataProvider";
-import {ScriptsTreeDataProvider} from "./ScriptsTreeDataProvider";
+import {
+  ScriptsTreeDataProvider,
+  ScriptsTreeItem,
+  TestCaseTreeItem,
+} from "./ScriptsTreeDataProvider";
 import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -103,11 +107,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const scriptsTreeDataProvider = new ScriptsTreeDataProvider();
 
-  const scriptsTreeView = vscode.window.createTreeView("scriptsTreeView", {
-    treeDataProvider: scriptsTreeDataProvider,
-    showCollapseAll: true,
-    canSelectMany: false,
-  });
+  const scriptsTreeView: vscode.TreeView<ScriptsTreeItem | TestCaseTreeItem> =
+    vscode.window.createTreeView("scriptsTreeView", {
+      treeDataProvider: scriptsTreeDataProvider,
+      showCollapseAll: true,
+      canSelectMany: false,
+    });
   scriptsTreeView.onDidChangeSelection((e) => {
     scriptsTreeDataProvider.onSelect(e.selection[0]);
   });
@@ -313,6 +318,23 @@ export async function activate(context: vscode.ExtensionContext) {
       const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
 
       scriptsTreeView.reveal(testCaseTreeItem, {select: true});
+    },
+  );
+
+  vscode.commands.registerCommand(
+    "datatransformer.saveAsTestCase",
+    async () => {
+      const scriptsTreeItem = scriptsTreeView.selection[0];
+
+      if (scriptsTreeItem && scriptsTreeItem instanceof ScriptsTreeItem) {
+        scriptsTreeDataProvider.saveAsTestCase(scriptsTreeItem);
+      } else {
+        vscode.window.showInformationMessage("No script selected");
+      }
+
+      // const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
+
+      // scriptsTreeView.reveal(testCaseTreeItem, {select: true});
     },
   );
 

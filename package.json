@@ -4,7 +4,7 @@
   "publisher": "andythehood",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
@@ -190,6 +190,12 @@
         "title": "Run Script",
         "enablement": "editorLangId == datatransformer",
         "icon": "$(play)"
+      },
+      {
+        "command": "datatransformer.saveAsTestCase",
+        "title": "Save As Test Case",
+        "when": "resourceScheme == readonly",
+        "icon": "$(beaker)"
       }
     ],
     "keybindings": [
@@ -206,6 +212,11 @@
           "command": "datatransformer.runScript",
           "group": "navigation",
           "when": "resourceLangId == datatransformer"
+        },
+        {
+          "command": "datatransformer.saveAsTestCase",
+          "group": "navigation",
+          "when": "resourceScheme == readonly"
         }
       ],
       "view/title": [

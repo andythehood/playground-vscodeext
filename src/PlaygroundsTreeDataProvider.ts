@@ -927,7 +927,6 @@ export class PlaygroundsTreeDataProvider
         if (data.status === 200) {
           this.readOnlyContentProvider.setContentAndRefresh(
             uri,
-            // JSON.stringify(JSON.parse(data.message), null, "\t") + "\n",
             JSON.stringify(JSON.parse(data.message), null, 2) + "\n",
           );
           vscode.languages.setTextDocumentLanguage(doc, "json");
@@ -958,44 +957,13 @@ export class PlaygroundsTreeDataProvider
             true,
           );
         }
-
-        // this.myProvider.onDidChangeEmitter.fire(uri);
-
-        //         if (!this.panel) {
-        //           this.panel = vscode.window.createWebviewPanel(
-        //             "datatransformerOutput",
-        //             title,
-        //             {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true},
-        //             {},
-        //           );
-        //           this.panel.onDidDispose(() => {
-        //             this.panel = null;
-        //           });
-        //         } else {
-        //           this.panel.title = title;
-        //         }
-
-        //         const html = `<html>
-        // <head>
-        // </head>
-        // <body>
-        // <pre>
-        // <code style="background-color: transparent;font-size: 12px;">${data.message}</code>
-        // </pre>
-        // </body>
-        // </html>`;
-
-        //         this.panel.webview.html = html;
       } catch (e: any) {
-        // vscode.window.showInformationMessage(
         vscode.window.showErrorMessage(
           `Error calling Jsonnet Server: ${e.message} ${e.cause}`,
         );
 
         // const uri = vscode.Uri.parse("readonly:" + title);
         const uri = vscode.Uri.parse("readonly:").with({path: title});
-
-        // this.myProvider.setContentAndRefresh(uri, data.message);
 
         const doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
 
