@@ -4,7 +4,7 @@
   "publisher": "andythehood",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
@@ -51,7 +51,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "playground-sidebar-view",
+          "id": "datatransformer-playground-sidebar-view",
           "title": "Data Transformer Playground",
           "icon": "media/jsonnetmapper_24px_grey.svg"
         }
@@ -59,27 +59,27 @@
     },
     "views": {
       "explorer": [],
-      "playground-sidebar-view": [
+      "datatransformer-playground-sidebar-view": [
         {
-          "id": "playgroundsTreeView",
+          "id": "datatransformer-playground-playgroundsTreeView",
           "type": "tree",
           "name": "Playgrounds",
           "visibility": "visible"
         },
         {
-          "id": "scriptsTreeView",
+          "id": "datatransformer-playground-scriptsTreeView",
           "type": "tree",
           "name": "Jsonnet Scripts",
           "visibility": "visible"
         },
         {
-          "id": "variablesWebView",
+          "id": "datatransformer-playground-variablesWebView",
           "type": "webview",
           "name": "Variables",
           "visibility": "visible"
         },
         {
-          "id": "helpTreeView",
+          "id": "datatransformer-playground-helpTreeView",
           "type": "tree",
           "name": "Help and Feedback",
           "visibility": "collapsed"
@@ -88,111 +88,111 @@
     },
     "viewsWelcome": [
       {
-        "view": "playgroundsTreeView",
+        "view": "datatransformer-playground-playgroundsTreeView",
         "when": "workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != ''",
         "contents": "No Playgrounds found [learn more](https://datatransformer-playground.web.app/).\n[New Playground](command:datatransformer.addPlayground)"
       },
       {
-        "view": "playgroundsTreeView",
+        "view": "datatransformer-playground-playgroundsTreeView",
         "when": "workspaceFolderCount == 0 && config.datatransformer.playground.playgroundStorageLocation == ''",
         "contents": "No Workspace or Folder open. \nPlease open a Workspace or Folder or set the Playground Storage Location in settings."
       },
       {
-        "view": "scriptsTreeView",
+        "view": "datatransformer-playground-scriptsTreeView",
         "contents": "Please select a playground.",
         "when": "!datatransformer.playgroundSelected"
       },
       {
-        "view": "scriptsTreeView",
+        "view": "datatransformer-playground-scriptsTreeView",
         "contents": "",
         "when": "datatransformer.playgroundSelected"
       }
     ],
     "commands": [
       {
-        "command": "datatransformer.importPlayground",
+        "command": "datatransformer-playground.importPlayground",
         "title": "Import Playground",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "datatransformer.exportPlayground",
+        "command": "datatransformer-playground.exportPlayground",
         "title": "Export Playground",
         "icon": "$(export)"
       },
       {
-        "command": "datatransformer.collapseAll",
+        "command": "datatransformer-playground.collapseAll",
         "title": "Collapse All",
         "icon": "$(collapse-all)"
       },
       {
-        "command": "datatransformer.expandAll",
+        "command": "datatransformer-playground.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "datatransformer.addExtVar",
+        "command": "datatransformer-playground.addExtVar",
         "title": "Add Variable",
         "icon": "$(add)"
       },
       {
-        "command": "datatransformer.addPlayground",
+        "command": "datatransformer-playground.addPlayground",
         "title": "Add Playground",
         "icon": "$(add)"
       },
       {
-        "command": "datatransformer.takeSnapshot",
+        "command": "datatransformer-playground.takeSnapshot",
         "title": "Take Snapshot",
         "icon": "$(device-camera)"
       },
       {
-        "command": "datatransformer.addTestCase",
+        "command": "datatransformer-playground.addTestCase",
         "title": "Add Test Case",
         "icon": "$(beaker)"
       },
       {
-        "command": "datatransformer.deleteTestCase",
+        "command": "datatransformer-playground.deleteTestCase",
         "title": "Delete Test Case",
         "icon": "$(trash)"
       },
       {
-        "command": "datatransformer.deletePlayground",
+        "command": "datatransformer-playground.deletePlayground",
         "title": "Delete Playground",
         "icon": "$(trash)"
       },
       {
-        "command": "datatransformer.renameSnapshot",
+        "command": "datatransformer-playground.renameSnapshot",
         "title": "Rename Snapshot",
         "icon": "$(edit)"
       },
       {
-        "command": "datatransformer.deleteSnapshot",
+        "command": "datatransformer-playground.deleteSnapshot",
         "title": "Delete Snapshot",
         "icon": "$(trash)"
       },
       {
-        "command": "datatransformer.addScript",
+        "command": "datatransformer-playground.addScript",
         "title": "Add Script",
         "icon": "$(add)"
       },
       {
-        "command": "datatransformer.deleteScript",
+        "command": "datatransformer-playground.deleteScript",
         "title": "Delete Script",
         "icon": "$(trash)"
       },
       {
-        "command": "datatransformer.selectAndRunScript",
+        "command": "datatransformer-playground.selectAndRunScript",
         "title": "Run Script",
-        "when": "editorLangId == datatransformer || view == scriptsTreeView",
+        "when": "editorLangId == datatransformer || view == datatransformer-playground-scriptsTreeView",
         "icon": "$(play)"
       },
       {
-        "command": "datatransformer.runScript",
+        "command": "datatransformer-playground.runScript",
         "title": "Run Script",
         "enablement": "editorLangId == datatransformer",
         "icon": "$(play)"
       },
       {
-        "command": "datatransformer.saveAsTestCase",
+        "command": "datatransformer-playground.saveAsTestCase",
         "title": "Save As Test Case",
         "when": "resourceScheme == readonly",
         "icon": "$(beaker)"
@@ -200,7 +200,7 @@
     ],
     "keybindings": [
       {
-        "command": "datatransformer.runScript",
+        "command": "datatransformer-playground.runScript",
         "key": "alt+shift+r",
         "mac": "alt+shift+r",
         "when": "editorLangId == datatransformer"
@@ -209,92 +209,92 @@
     "menus": {
       "editor/title": [
         {
-          "command": "datatransformer.runScript",
+          "command": "datatransformer-playground.runScript",
           "group": "navigation",
           "when": "resourceLangId == datatransformer"
         },
         {
-          "command": "datatransformer.saveAsTestCase",
+          "command": "datatransformer-playground.saveAsTestCase",
           "group": "navigation",
           "when": "resourceScheme == readonly"
         }
       ],
       "view/title": [
         {
-          "command": "datatransformer.addPlayground",
-          "when": "view == playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
+          "command": "datatransformer-playground.addPlayground",
+          "when": "view == datatransformer-playground-playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
           "group": "navigation@1"
         },
         {
-          "command": "datatransformer.importPlayground",
-          "when": "view == playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
+          "command": "datatransformer-playground.importPlayground",
+          "when": "view == datatransformer-playground-playgroundsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
           "group": "navigation@2"
         },
         {
-          "command": "datatransformer.addScript",
-          "when": "view == scriptsTreeView && datatransformer.playgroundSelected",
+          "command": "datatransformer-playground.addScript",
+          "when": "view == datatransformer-playground-scriptsTreeView && datatransformer.playgroundSelected",
           "group": "navigation@1"
         },
         {
-          "command": "datatransformer.addExtVar",
-          "when": "view == variablesWebView && datatransformer.playgroundSelected",
+          "command": "datatransformer-playground.addExtVar",
+          "when": "view == datatransformer-playground-variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@1"
         },
         {
-          "command": "datatransformer.expandAll",
-          "when": "view == variablesWebView && datatransformer.playgroundSelected",
+          "command": "datatransformer-playground.expandAll",
+          "when": "view == datatransformer-playground-variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@2"
         },
         {
-          "command": "datatransformer.collapseAll",
-          "when": "view == variablesWebView && datatransformer.playgroundSelected",
+          "command": "datatransformer-playground.collapseAll",
+          "when": "view == datatransformer-playground-variablesWebView && datatransformer.playgroundSelected",
           "group": "navigation@3"
         }
       ],
       "view/item/context": [
         {
-          "command": "datatransformer.deletePlayground",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
+          "command": "datatransformer-playground.deletePlayground",
+          "when": "view == datatransformer-playground-playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@1"
         },
         {
-          "command": "datatransformer.exportPlayground",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
+          "command": "datatransformer-playground.exportPlayground",
+          "when": "view == datatransformer-playground-playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@2"
         },
         {
-          "command": "datatransformer.takeSnapshot",
-          "when": "view == playgroundsTreeView && viewItem == PlaygroundTreeItem",
+          "command": "datatransformer-playground.takeSnapshot",
+          "when": "view == datatransformer-playground-playgroundsTreeView && viewItem == PlaygroundTreeItem",
           "group": "inline@3"
         },
         {
-          "command": "datatransformer.deleteSnapshot",
-          "when": "view == playgroundsTreeView && viewItem == SnapshotTreeItem",
+          "command": "datatransformer-playground.deleteSnapshot",
+          "when": "view == datatransformer-playground-playgroundsTreeView && viewItem == SnapshotTreeItem",
           "group": "inline@1"
         },
         {
-          "command": "datatransformer.renameSnapshot",
-          "when": "view == playgroundsTreeView && viewItem == SnapshotTreeItem",
+          "command": "datatransformer-playground.renameSnapshot",
+          "when": "view == datatransformer-playground-playgroundsTreeView && viewItem == SnapshotTreeItem",
           "group": "inline@2"
         },
         {
-          "command": "datatransformer.deleteScript",
-          "when": "view == scriptsTreeView && viewItem == ScriptsTreeItem",
+          "command": "datatransformer-playground.deleteScript",
+          "when": "view == datatransformer-playground-scriptsTreeView && viewItem == ScriptsTreeItem",
           "group": "inline@1"
         },
         {
-          "command": "datatransformer.selectAndRunScript",
-          "when": "view == scriptsTreeView && viewItem != TestCaseTreeItem",
+          "command": "datatransformer-playground.selectAndRunScript",
+          "when": "view == datatransformer-playground-scriptsTreeView && viewItem != TestCaseTreeItem",
           "group": "inline@2"
         },
         {
-          "command": "datatransformer.addTestCase",
-          "when": "view == scriptsTreeView && viewItem != TestCaseTreeItem",
+          "command": "datatransformer-playground.addTestCase",
+          "when": "view == datatransformer-playground-scriptsTreeView && viewItem != TestCaseTreeItem",
           "group": "inline@3"
         },
         {
-          "command": "datatransformer.deleteTestCase",
-          "when": "view == scriptsTreeView && viewItem == TestCaseTreeItem",
+          "command": "datatransformer-playground.deleteTestCase",
+          "when": "view == datatransformer-playground-scriptsTreeView && viewItem == TestCaseTreeItem",
           "group": "inline@1"
         }
       ]

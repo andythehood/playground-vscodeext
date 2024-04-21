@@ -30,7 +30,7 @@ import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log(
-    'Congratulations, your extension "appint" is now active!',
+    'Congratulations, your extension "datatransformer-playground" is now active!',
     context.storageUri,
   );
 
@@ -100,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "variablesWebView",
+      "datatransformer-playground-variablesWebView",
       variablesViewProvider,
     ),
   );
@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const scriptsTreeDataProvider = new ScriptsTreeDataProvider();
 
   const scriptsTreeView: vscode.TreeView<ScriptsTreeItem | TestCaseTreeItem> =
-    vscode.window.createTreeView("scriptsTreeView", {
+    vscode.window.createTreeView("datatransformer-playground-scriptsTreeView", {
       treeDataProvider: scriptsTreeDataProvider,
       showCollapseAll: true,
       canSelectMany: false,
@@ -128,7 +128,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   const playgroundsTreeView = vscode.window.createTreeView(
-    "playgroundsTreeView",
+    "datatransformer-playground-playgroundsTreeView",
     {
       treeDataProvider: playgroundsTreeDataProvider,
       showCollapseAll: true,
@@ -157,11 +157,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const helpTreeDataProvider = new HelpTreeDataProvider();
 
-  const helpTreeView = vscode.window.createTreeView("helpTreeView", {
-    treeDataProvider: helpTreeDataProvider,
-    showCollapseAll: true,
-    canSelectMany: false,
-  });
+  const helpTreeView = vscode.window.createTreeView(
+    "datatransformer-playground-helpTreeView",
+    {
+      treeDataProvider: helpTreeDataProvider,
+      showCollapseAll: true,
+      canSelectMany: false,
+    },
+  );
   helpTreeView.onDidChangeSelection((e) =>
     helpTreeDataProvider.openUrl(e.selection[0]),
   );
@@ -177,15 +180,19 @@ export async function activate(context: vscode.ExtensionContext) {
     providers.hoverProvider,
   );
 
-  vscode.languages.registerCompletionItemProvider(
-    "datatransformer",
-    providers.completionItemProvider,
-    ".",
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      "datatransformer",
+      providers.completionItemProvider,
+      ".",
+    ),
   );
 
-  vscode.languages.registerDocumentFormattingEditProvider(
-    "datatransformer",
-    providers.documentFormattingEditProvider,
+  context.subscriptions.push(
+    vscode.languages.registerDocumentFormattingEditProvider(
+      "datatransformer",
+      providers.documentFormattingEditProvider,
+    ),
   );
 
   context.subscriptions.push(
@@ -238,137 +245,204 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register the Commands
 
-  vscode.commands.registerCommand("datatransformer.deletePlayground", (node) =>
-    playgroundsTreeDataProvider.deletePlayground(node),
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.deletePlayground",
+      (node) => playgroundsTreeDataProvider.deletePlayground(node),
+    ),
   );
 
-  vscode.commands.registerCommand(
-    "datatransformer.deleteSnapshot",
-    async (node) => {
-      const playgroundName = await playgroundsTreeDataProvider.deleteSnapshot(
-        node,
-      );
-
-      if (playgroundName) {
-        const playgroundNode = playgroundsTreeDataProvider.getPlayground(
-          playgroundName,
-          null,
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.deleteSnapshot",
+      async (node) => {
+        const playgroundName = await playgroundsTreeDataProvider.deleteSnapshot(
+          node,
         );
-        await scriptsTreeDataProvider.set(playgroundNode.uri);
-        await variablesViewProvider.set(playgroundNode.uri);
-      }
-    },
+
+        if (playgroundName) {
+          const playgroundNode = playgroundsTreeDataProvider.getPlayground(
+            playgroundName,
+            null,
+          );
+          await scriptsTreeDataProvider.set(playgroundNode.uri);
+          await variablesViewProvider.set(playgroundNode.uri);
+        }
+      },
+    ),
   );
 
-  vscode.commands.registerCommand("datatransformer.addPlayground", async () => {
-    const playground = await playgroundsTreeDataProvider.addPlayground();
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.addPlayground",
+      async () => {
+        const playground = await playgroundsTreeDataProvider.addPlayground();
 
-    setTimeout(
-      () =>
-        playgroundsTreeView.reveal(
-          playgroundsTreeDataProvider.getPlayground(playground, null),
-          {select: true, focus: false},
-        ),
-      200,
-    );
-  });
-
-  vscode.commands.registerCommand(
-    "datatransformer.importPlayground",
-    async () => {
-      const playground = await playgroundsTreeDataProvider.importPlayground();
-      setTimeout(
-        () =>
-          playgroundsTreeView.reveal(
-            playgroundsTreeDataProvider.getPlayground(playground, null),
-            {select: true, focus: false},
-          ),
-        200,
-      );
-    },
+        setTimeout(
+          () =>
+            playgroundsTreeView.reveal(
+              playgroundsTreeDataProvider.getPlayground(playground, null),
+              {select: true, focus: false},
+            ),
+          200,
+        );
+      },
+    ),
   );
 
-  vscode.commands.registerCommand("datatransformer.takeSnapshot", (node) => {
-    playgroundsTreeDataProvider.takeSnapshot(node);
-  });
-
-  vscode.commands.registerCommand("datatransformer.renameSnapshot", (node) => {
-    playgroundsTreeDataProvider.renameSnapshot(node);
-  });
-
-  vscode.commands.registerCommand(
-    "datatransformer.exportPlayground",
-    (node) => {
-      playgroundsTreeDataProvider.exportPlayground(node);
-    },
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.importPlayground",
+      async () => {
+        const playground = await playgroundsTreeDataProvider.importPlayground();
+        setTimeout(
+          () =>
+            playgroundsTreeView.reveal(
+              playgroundsTreeDataProvider.getPlayground(playground, null),
+              {select: true, focus: false},
+            ),
+          200,
+        );
+      },
+    ),
   );
 
-  vscode.commands.registerCommand("datatransformer.addScript", async () => {
-    const scriptsTreeItem = await scriptsTreeDataProvider.addScript();
-    scriptsTreeView.reveal(scriptsTreeItem, {select: true});
-  });
-
-  vscode.commands.registerCommand("datatransformer.deleteScript", (node) => {
-    scriptsTreeDataProvider.deleteScript(node);
-  });
-
-  vscode.commands.registerCommand(
-    "datatransformer.addTestCase",
-    async (node) => {
-      const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
-
-      scriptsTreeView.reveal(testCaseTreeItem, {select: true});
-    },
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.takeSnapshot",
+      (node) => {
+        playgroundsTreeDataProvider.takeSnapshot(node);
+      },
+    ),
   );
 
-  vscode.commands.registerCommand(
-    "datatransformer.saveAsTestCase",
-    async () => {
-      const scriptsTreeItem = scriptsTreeView.selection[0];
-
-      if (scriptsTreeItem && scriptsTreeItem instanceof ScriptsTreeItem) {
-        scriptsTreeDataProvider.saveAsTestCase(scriptsTreeItem);
-      } else {
-        vscode.window.showInformationMessage("No script selected");
-      }
-
-      // const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
-
-      // scriptsTreeView.reveal(testCaseTreeItem, {select: true});
-    },
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.renameSnapshot",
+      (node) => {
+        playgroundsTreeDataProvider.renameSnapshot(node);
+      },
+    ),
   );
 
-  vscode.commands.registerCommand("datatransformer.deleteTestCase", (node) => {
-    scriptsTreeDataProvider.deleteTestCase(node);
-  });
-
-  vscode.commands.registerCommand(
-    "datatransformer.selectAndRunScript",
-    async (node) => {
-      await scriptsTreeDataProvider.onSelect(node);
-
-      await scriptsTreeView.reveal(node, {
-        select: true,
-      });
-      playgroundsTreeDataProvider.exec();
-    },
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.exportPlayground",
+      (node) => {
+        playgroundsTreeDataProvider.exportPlayground(node);
+      },
+    ),
   );
 
-  vscode.commands.registerCommand("datatransformer.collapseAll", () => {
-    variablesViewProvider.collapseAll();
-  });
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.addScript",
+      async () => {
+        const scriptsTreeItem = await scriptsTreeDataProvider.addScript();
+        scriptsTreeView.reveal(scriptsTreeItem, {select: true});
+      },
+    ),
+  );
 
-  vscode.commands.registerCommand("datatransformer.addExtVar", () => {
-    variablesViewProvider.addExtVar();
-  });
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.deleteScript",
+      (node) => {
+        scriptsTreeDataProvider.deleteScript(node);
+      },
+    ),
+  );
 
-  vscode.commands.registerCommand("datatransformer.expandAll", () => {
-    variablesViewProvider.expandAll();
-  });
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.addTestCase",
+      async (node) => {
+        const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(
+          node,
+        );
 
-  vscode.commands.registerCommand("datatransformer.runScript", () => {
-    playgroundsTreeDataProvider.exec();
-  });
+        scriptsTreeView.reveal(testCaseTreeItem, {select: true});
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.saveAsTestCase",
+      async () => {
+        const scriptsTreeItem = scriptsTreeView.selection[0];
+
+        if (scriptsTreeItem && scriptsTreeItem instanceof ScriptsTreeItem) {
+          scriptsTreeDataProvider.saveAsTestCase(scriptsTreeItem);
+        } else {
+          vscode.window.showInformationMessage("No script selected");
+        }
+
+        // const testCaseTreeItem = await scriptsTreeDataProvider.addTestCase(node);
+
+        // scriptsTreeView.reveal(testCaseTreeItem, {select: true});
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.deleteTestCase",
+      (node) => {
+        scriptsTreeDataProvider.deleteTestCase(node);
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.selectAndRunScript",
+      async (node) => {
+        await scriptsTreeDataProvider.onSelect(node);
+
+        await scriptsTreeView.reveal(node, {
+          select: true,
+        });
+        playgroundsTreeDataProvider.exec();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.collapseAll",
+      () => {
+        variablesViewProvider.collapseAll();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.addExtVar",
+      () => {
+        variablesViewProvider.addExtVar();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.expandAll",
+      () => {
+        variablesViewProvider.expandAll();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.runScript",
+      () => {
+        playgroundsTreeDataProvider.exec();
+      },
+    ),
+  );
 }
 
 // This method is called when your extension is deactivated

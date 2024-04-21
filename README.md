@@ -49,22 +49,30 @@ _There may be some minor differences in the behaviour of the Data Transformer ad
 
 ## Release Notes
 
+### 0.1.5
+
+- Add registerCommand disposables to context.subscriptions
+
+- Prepend extension name to create unique view names
+
+- Fix 'id already registered' bug due to overload of id parameter
+
 ### 0.1.4
 
-Add ability to add test case directly from output
+- Add ability to add test case directly from output
 
 ### 0.1.3
 
-Fixes for iconpath on windows
+- Fixes for iconpath on windows
 
 ### 0.1.2
 
-Add test case feature
+- Add test case feature
 
 ### 0.1.1
 
-First release of Extension on Vscode Marketplace
+- First release of Extension on Vscode Marketplace
 
 ### 0.1.0
 
-Initial pre-release of Data Transformer Playground
+- Initial pre-release of Data Transformer Playground

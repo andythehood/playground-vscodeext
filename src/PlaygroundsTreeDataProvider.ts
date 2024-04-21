@@ -29,9 +29,14 @@ export class SnapshotTreeItem extends vscode.TreeItem {
   uri: vscode.Uri;
   parent?: string;
   children: SnapshotTreeItem[] | undefined;
-  id: string;
+  snapshotId: string;
 
-  constructor(label: string, id: string, uri: vscode.Uri, parent: string) {
+  constructor(
+    label: string,
+    snapshotId: string,
+    uri: vscode.Uri,
+    parent: string,
+  ) {
     super(label, vscode.TreeItemCollapsibleState.None);
 
     this.iconPath = new vscode.ThemeIcon(
@@ -40,7 +45,7 @@ export class SnapshotTreeItem extends vscode.TreeItem {
     );
     this.uri = uri;
     this.parent = parent;
-    this.id = id;
+    this.snapshotId = snapshotId;
   }
 
   contextValue = "SnapshotTreeItem";
@@ -134,9 +139,9 @@ export class PlaygroundsTreeDataProvider
 
     if (node instanceof SnapshotTreeItem) {
       const idLabel =
-        new Date(parseInt(node.id)).toDateString() +
+        new Date(parseInt(node.snapshotId)).toDateString() +
         " " +
-        new Date(parseInt(node.id)).toLocaleTimeString();
+        new Date(parseInt(node.snapshotId)).toLocaleTimeString();
       if (node.label !== idLabel) {
         node.tooltip = "Snapshot created at " + idLabel;
       }
@@ -161,7 +166,7 @@ export class PlaygroundsTreeDataProvider
 
       return playgroundTreeItem.children.find(
         // (item) => item.label.toString() === idLabel,
-        (item) => item.id === snapshot,
+        (item) => item.snapshotId === snapshot,
       );
     } else {
       return playgroundTreeItem;
@@ -424,9 +429,9 @@ export class PlaygroundsTreeDataProvider
       label = snapshotName;
     } else {
       label =
-        new Date(parseInt(node.id)).toDateString() +
+        new Date(parseInt(node.snapshotId)).toDateString() +
         " " +
-        new Date(parseInt(node.id)).toLocaleTimeString();
+        new Date(parseInt(node.snapshotId)).toLocaleTimeString();
     }
 
     const snapshotMeta = {label: label};
