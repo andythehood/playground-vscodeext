@@ -49,6 +49,10 @@ _There may be some minor differences in the behaviour of the Data Transformer ad
 
 ## Release Notes
 
+### 0.1.6
+
+- Add resolveJsonPath and xsltTransform commands
+
 ### 0.1.5
 
 - Add registerCommand disposables to context.subscriptions

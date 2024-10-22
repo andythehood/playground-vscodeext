@@ -147,6 +147,21 @@ export const transformerFunctions: JsonnetFunction[] = [
     snippet: "objectRemoveKey(${1:obj}, ${2:key})",
   },
   {
+    label: "resolveJsonPath",
+    detail: "resolveJsonPath(obj, path)",
+    documentation:
+      "Resolves a JSON path on a given JSON object by using the JSONPath reference.",
+    snippet: "resolveJsonPath(${1:obj}, ${2:path})",
+  },
+  {
+    label: "xsltTransform",
+    detail: "xsltTransform(xml, xsl)",
+    documentation:
+      "Transform the specified XML string using the specified XSL string.",
+    snippet: "xsltTransform(${1:xml}, ${2:xsl})",
+  },
+
+  {
     label: "parseXml",
     detail: 'parseXml(xml, format="badgerfish")',
     documentation: "Parses the specified input XML string into a JSON object.",
