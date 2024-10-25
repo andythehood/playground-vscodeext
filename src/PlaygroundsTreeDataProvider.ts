@@ -93,6 +93,7 @@ export class PlaygroundsTreeDataProvider
 
   constructor(
     private readonly playgroundsRootUri: vscode.Uri,
+    private readonly libsonnetsRootUri: vscode.Uri,
     private readonly diagnosticCollection: vscode.DiagnosticCollection,
     private readonly variablesProvider: VariablesViewProvider,
     private readonly scriptsProvider: ScriptsTreeDataProvider,
@@ -818,6 +819,38 @@ export class PlaygroundsTreeDataProvider
     return playgroundName;
   }
 
+  async getLibsonnets(): Promise<any[]> {
+    const libs = [];
+
+    if (this.libsonnetsRootUri) {
+      try {
+        const libsonnetsDirEntries = (
+          await vscode.workspace.fs.readDirectory(this.libsonnetsRootUri)
+        ).filter(
+          ([name, type]) =>
+            name !== ".DS_Store" && type === vscode.FileType.File,
+        );
+
+        for (const [libsonnetName, _] of libsonnetsDirEntries) {
+          const libsonnetUri = vscode.Uri.joinPath(
+            this.libsonnetsRootUri,
+            libsonnetName,
+          );
+
+          const bytes = await vscode.workspace.fs.readFile(libsonnetUri);
+          libs.push({
+            name: libsonnetName,
+            contents: bytes.toString(),
+          });
+        }
+      } catch (e) {
+        console.log("Directory doesn't exist yet, so no libsonnets", e);
+      }
+    }
+
+    return libs;
+  }
+
   public async exec() {
     const editor = vscode.window.activeTextEditor;
 
@@ -869,6 +902,7 @@ export class PlaygroundsTreeDataProvider
         script: basename(editor.document.fileName),
         snippet: editor.document.getText(),
         extVars: extVars,
+        libs: await this.getLibsonnets(),
       };
 
       try {

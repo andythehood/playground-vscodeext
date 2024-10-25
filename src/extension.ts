@@ -15,7 +15,7 @@
 */
 
 import * as vscode from "vscode";
-import {extname} from "path";
+import {basename, extname} from "path";
 
 import {VariablesViewProvider} from "./VariablesViewProvider";
 import {HelpTreeDataProvider} from "./HelpTreeDataProvider";
@@ -27,11 +27,14 @@ import {
   TestCaseTreeItem,
 } from "./ScriptsTreeDataProvider";
 import {ReadOnlyContentProvider} from "./ReadOnlyContentProvider";
+import {
+  LibsonnetsTreeDataProvider,
+  LibsonnetsTreeItem,
+} from "./LibsonnetsTreeDataProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "datatransformer-playground" is now active!',
-    context.storageUri,
   );
 
   const outputChannel = vscode.window.createOutputChannel("Data Transformer");
@@ -45,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
     workbenchConfig?.get("playgroundStorageLocation") || "";
 
   let playgroundsRootUri: vscode.Uri = null;
+  let libsonnetsRootUri: vscode.Uri = null;
 
   if (playgroundStorageLocation) {
     try {
@@ -56,6 +60,11 @@ export async function activate(context: vscode.ExtensionContext) {
         playgroundsStorageLocationUri,
         "playgrounds",
       );
+
+      libsonnetsRootUri = vscode.Uri.joinPath(
+        playgroundsStorageLocationUri,
+        "libsonnets",
+      );
     } catch (e) {
       vscode.window.showErrorMessage(
         `Unable to create playgrounds directory: ${playgroundStorageLocation}`,
@@ -65,6 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
   } else if (context.storageUri) {
     await vscode.workspace.fs.createDirectory(context.storageUri);
     playgroundsRootUri = vscode.Uri.joinPath(context.storageUri, "playgrounds");
+    libsonnetsRootUri = vscode.Uri.joinPath(context.storageUri, "libsonnets");
   } else {
     vscode.window.showInformationMessage(
       "No Workspace or Folder open. Please open a Workspace or Folder to use Data Transformer Playgrounds.",
@@ -79,6 +89,17 @@ export async function activate(context: vscode.ExtensionContext) {
         `Unable to create playgrounds folder: ${playgroundsRootUri.path}`,
       );
       playgroundsRootUri = null;
+    }
+  }
+
+  if (libsonnetsRootUri) {
+    try {
+      await vscode.workspace.fs.createDirectory(libsonnetsRootUri);
+    } catch (e) {
+      vscode.window.showErrorMessage(
+        `Unable to create libsonnets folder: ${libsonnetsRootUri.path}`,
+      );
+      libsonnetsRootUri = null;
     }
   }
 
@@ -117,8 +138,27 @@ export async function activate(context: vscode.ExtensionContext) {
     scriptsTreeDataProvider.onSelect(e.selection[0]);
   });
 
+  const libsonnetsTreeDataProvider = new LibsonnetsTreeDataProvider(
+    libsonnetsRootUri,
+  );
+
+  const libsonnetsTreeView: vscode.TreeView<LibsonnetsTreeItem> =
+    vscode.window.createTreeView(
+      "datatransformer-playground-libsonnetsTreeView",
+      {
+        treeDataProvider: libsonnetsTreeDataProvider,
+        showCollapseAll: true,
+        canSelectMany: false,
+        dragAndDropController: libsonnetsTreeDataProvider,
+      },
+    );
+  libsonnetsTreeView.onDidChangeSelection((e) => {
+    libsonnetsTreeDataProvider.onSelect(e.selection[0]);
+  });
+
   const playgroundsTreeDataProvider = new PlaygroundsTreeDataProvider(
     playgroundsRootUri,
+    libsonnetsRootUri,
     diagnosticCollection,
     variablesViewProvider,
     scriptsTreeDataProvider,
@@ -152,6 +192,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   });
 
+  context.subscriptions.push(libsonnetsTreeView);
   context.subscriptions.push(playgroundsTreeView);
   context.subscriptions.push(scriptsTreeView);
 
@@ -239,6 +280,16 @@ export async function activate(context: vscode.ExtensionContext) {
             },
           );
         }
+      } else if (
+        editor?.document.uri.path
+          .toLowerCase()
+          .startsWith(libsonnetsRootUri.path.toLowerCase())
+      ) {
+        libsonnetsTreeView.reveal(
+          libsonnetsTreeDataProvider.getLibsonnet(
+            basename(editor.document.fileName),
+          ),
+        );
       }
     }),
   );
@@ -304,6 +355,47 @@ export async function activate(context: vscode.ExtensionContext) {
           200,
         );
       },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.addLibsonnet",
+      async () => {
+        const libsonnet = await libsonnetsTreeDataProvider.addLibsonnet();
+        setTimeout(
+          () =>
+            libsonnetsTreeView.reveal(
+              libsonnetsTreeDataProvider.getLibsonnet(libsonnet),
+              {select: true, focus: false},
+            ),
+          200,
+        );
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.importLibsonnet",
+      async () => {
+        const libsonnet = await libsonnetsTreeDataProvider.importLibsonnet();
+        setTimeout(
+          () =>
+            libsonnetsTreeView.reveal(
+              libsonnetsTreeDataProvider.getLibsonnet(libsonnet),
+              {select: true, focus: false},
+            ),
+          200,
+        );
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "datatransformer-playground.deleteLibsonnet",
+      (node) => libsonnetsTreeDataProvider.deleteLibsonnet(node),
     ),
   );
 

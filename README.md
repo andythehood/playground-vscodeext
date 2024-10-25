@@ -49,6 +49,10 @@ _There may be some minor differences in the behaviour of the Data Transformer ad
 
 ## Release Notes
 
+### 0.2.0
+
+- Add support for Jsonnet libraries
+
 ### 0.1.6
 
 - Add resolveJsonPath and xsltTransform commands

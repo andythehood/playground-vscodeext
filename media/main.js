@@ -251,6 +251,23 @@
       const span = document.createElement("span");
       span.style.verticalAlign = "top";
       span.textContent = extVar.name;
+
+      span.draggable = true;
+
+      console.log("wtaf");
+      span.addEventListener(
+        "dragstart",
+        function (e) {
+          if (e && e.dataTransfer) {
+            e.dataTransfer.setData(
+              "text/plain",
+              `local ${extVar.name} = std.extVar('${extVar.name}');\n`,
+            );
+          }
+        },
+        true,
+      );
+
       li.appendChild(span);
 
       const i3 = document.createElement("i");
@@ -306,6 +323,16 @@
       nestedUl.appendChild(nestedLi);
 
       li.appendChild(nestedUl);
+
+      // li.addEventListener("click", (e) => {
+      //   console.log("click", e);
+      //   // if (e && e.dataTransfer) {
+      //   //   e.dataTransfer.setData(
+      //   //     "text/plain",
+      //   //     `local ${extVar.name} = std.extVar('${extVar.name}');\n`,
+      //   //   );
+      //   // }
+      // });
 
       ul.appendChild(li);
     }
