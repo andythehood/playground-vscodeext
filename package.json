@@ -4,7 +4,7 @@
   "publisher": "andythehood",
   "description": "Data Transformer Playgrounds for Google Cloud Application Integration",
   "icon": "media/icon.png",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/andythehood/playground-vscodeext"
@@ -79,6 +79,12 @@
           "visibility": "visible"
         },
         {
+          "id": "datatransformer-playground-libsonnetsTreeView",
+          "type": "tree",
+          "name": "Jsonnet Libraries",
+          "visibility": "hidden"
+        },
+        {
           "id": "datatransformer-playground-helpTreeView",
           "type": "tree",
           "name": "Help and Feedback",
@@ -90,10 +96,20 @@
       {
         "view": "datatransformer-playground-playgroundsTreeView",
         "when": "workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != ''",
-        "contents": "No Playgrounds found [learn more](https://datatransformer-playground.web.app/).\n[New Playground](command:datatransformer.addPlayground)"
+        "contents": "No Playgrounds found [learn more](https://datatransformer-playground.web.app/).\n[New Playground](command:datatransformer-playground.addPlayground)"
+      },
+      {
+        "view": "datatransformer-playground-libsonnetsTreeView",
+        "when": "workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != ''",
+        "contents": "Note, this feature is not currently supported by Application Integration\nNo Jsonnet Libraries found [learn more](https://datatransformer-playground.web.app/).\n[New Jsonnet Library](command:datatransformer-playground.addLibsonnet)"
       },
       {
         "view": "datatransformer-playground-playgroundsTreeView",
+        "when": "workspaceFolderCount == 0 && config.datatransformer.playground.playgroundStorageLocation == ''",
+        "contents": "No Workspace or Folder open. \nPlease open a Workspace or Folder or set the Playground Storage Location in settings."
+      },
+      {
+        "view": "datatransformer-playground-libsonnetsTreeView",
         "when": "workspaceFolderCount == 0 && config.datatransformer.playground.playgroundStorageLocation == ''",
         "contents": "No Workspace or Folder open. \nPlease open a Workspace or Folder or set the Playground Storage Location in settings."
       },
@@ -112,6 +128,11 @@
       {
         "command": "datatransformer-playground.importPlayground",
         "title": "Import Playground",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "datatransformer-playground.importLibsonnet",
+        "title": "Import Jsonnet Library",
         "icon": "$(cloud-download)"
       },
       {
@@ -140,6 +161,11 @@
         "icon": "$(add)"
       },
       {
+        "command": "datatransformer-playground.addLibsonnet",
+        "title": "Add Jsonnet Library",
+        "icon": "$(add)"
+      },
+      {
         "command": "datatransformer-playground.takeSnapshot",
         "title": "Take Snapshot",
         "icon": "$(device-camera)"
@@ -157,6 +183,11 @@
       {
         "command": "datatransformer-playground.deletePlayground",
         "title": "Delete Playground",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "datatransformer-playground.deleteLibsonnet",
+        "title": "Delete Jsonnet Library",
         "icon": "$(trash)"
       },
       {
@@ -231,6 +262,16 @@
           "group": "navigation@2"
         },
         {
+          "command": "datatransformer-playground.addLibsonnet",
+          "when": "view == datatransformer-playground-libsonnetsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
+          "group": "navigation@1"
+        },
+        {
+          "command": "datatransformer-playground.importLibsonnet",
+          "when": "view == datatransformer-playground-libsonnetsTreeView && (workspaceFolderCount > 0 || config.datatransformer.playground.playgroundStorageLocation != '')",
+          "group": "navigation@2"
+        },
+        {
           "command": "datatransformer-playground.addScript",
           "when": "view == datatransformer-playground-scriptsTreeView && datatransformer.playgroundSelected",
           "group": "navigation@1"
@@ -295,6 +336,11 @@
         {
           "command": "datatransformer-playground.deleteTestCase",
           "when": "view == datatransformer-playground-scriptsTreeView && viewItem == TestCaseTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "datatransformer-playground.deleteLibsonnet",
+          "when": "view == datatransformer-playground-libsonnetsTreeView && viewItem == LibsonnetsTreeItem",
           "group": "inline@1"
         }
       ]
